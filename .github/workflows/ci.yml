@@ -1,0 +1,91 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint:
+    name: Lint (pre-commit hooks in the dev container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      IMAGE: raspberry-pi-manager-dev:ci
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
+
+      - name: Build the development container image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
+        with:
+          context: .
+          file: .devcontainer/Dockerfile
+          tags: ${{ env.IMAGE }}
+          load: true
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # The image is loaded locally and never published.
+      - name: Cache the pre-commit hook environments
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0 # zizmor: ignore[cache-poisoning]
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml', '.devcontainer/Dockerfile') }}
+
+      # gitleaks runs in the secrets job.
+      - name: Run every hook on every file
+        run: |
+          mkdir -p ~/.cache/pre-commit
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/tmp \
+            --env PRE_COMMIT_HOME=/pre-commit-cache \
+            --env SKIP=gitleaks \
+            --volume "$PWD:/workspaces/raspberry-pi-manager" \
+            --volume "$HOME/.cache/pre-commit:/pre-commit-cache" \
+            "$IMAGE" \
+            bash -c 'ansible-galaxy collection install --requirements-file requirements.yml --collections-path collections \
+              && pre-commit run --all-files --show-diff-on-failure'
+
+  secrets:
+    name: Secret scan (full git history)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the repository with its full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e  # v7.0.0
+        with:
+          go-version: stable
+          cache: false
+
+      # Same version as the gitleaks hook in .pre-commit-config.yaml
+      - name: Install gitleaks
+        run: go install github.com/zricethezav/gitleaks/v8@v8.30.1
+
+      - name: Scan every commit
+        run: '"$(go env GOPATH)/bin/gitleaks" git --redact --verbose .'
