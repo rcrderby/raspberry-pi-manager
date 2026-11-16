@@ -1,0 +1,19 @@
+# Ansible Vault password
+.vault_pass
+.vault_pass.*
+*.vault_pass
+
+# Collections and tool caches
+collections/
+.ansible/
+.cache/
+*.retry
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS and editors
+.DS_Store
+.vscode/
+.idea/

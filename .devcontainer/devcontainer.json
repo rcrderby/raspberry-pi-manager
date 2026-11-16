@@ -1,0 +1,55 @@
+{
+  "name": "raspberry-pi-manager",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspaces/raspberry-pi-manager",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/raspberry-pi-manager,type=bind",
+  "mounts": [
+    "source=raspberry-pi-manager-collections,target=/workspaces/raspberry-pi-manager/collections,type=volume",
+    "source=raspberry-pi-manager-pre-commit,target=/home/vscode/.cache/pre-commit,type=volume",
+    "source=raspberry-pi-manager-ssh,target=/home/vscode/.ssh,type=volume"
+  ],
+  "containerEnv": {
+    "GIT_CONFIG_COUNT": "1",
+    "GIT_CONFIG_KEY_0": "core.fileMode",
+    "GIT_CONFIG_VALUE_0": "false"
+  },
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
+  "postCreateCommand": ".devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "davidanson.vscode-markdownlint",
+        "editorconfig.editorconfig",
+        "exiasr.hadolint",
+        "github.vscode-github-actions",
+        "ms-python.python",
+        "redhat.ansible",
+        "redhat.vscode-yaml",
+        "streetsidesoftware.code-spell-checker",
+        "timonwong.shellcheck"
+      ],
+      "settings": {
+        "ansible.python.interpreterPath": "/opt/venv/bin/python",
+        "ansible.validation.lint.enabled": true,
+        "ansible.validation.lint.path": "/opt/venv/bin/ansible-lint",
+        "files.associations": {
+          "**/playbooks/*.yml": "ansible",
+          "**/roles/**/*.yml": "ansible",
+          "site.yml": "ansible",
+          "maintenance.yml": "ansible"
+        },
+        "python.defaultInterpreterPath": "/opt/venv/bin/python",
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "[yaml]": {
+          "editor.insertSpaces": true,
+          "editor.tabSize": 2,
+          "editor.autoIndent": "keep"
+        }
+      }
+    }
+  }
+}
