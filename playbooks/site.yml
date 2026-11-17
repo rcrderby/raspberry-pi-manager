@@ -30,3 +30,4 @@
   roles:
     - base
     - network
+    - pi_config
