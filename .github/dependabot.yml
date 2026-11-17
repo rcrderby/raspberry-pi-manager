@@ -14,7 +14,9 @@ updates:
       - dependencies
 
   - package-ecosystem: docker
-    directory: /.devcontainer
+    directories:
+      - /.devcontainer
+      - /molecule/default
     schedule:
       interval: weekly
     cooldown:

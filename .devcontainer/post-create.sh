@@ -2,5 +2,5 @@
 # Runs once after the development container is created.
 set -euo pipefail
 
-ansible-galaxy collection install --requirements-file requirements.yml --collections-path collections
+scripts/install-collections.sh
 pre-commit install --install-hooks

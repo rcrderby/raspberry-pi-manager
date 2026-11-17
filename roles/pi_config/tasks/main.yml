@@ -48,3 +48,5 @@
   loop:
     - ssh.service
     - wayvnc.service
+  tags:
+    - molecule-notest
