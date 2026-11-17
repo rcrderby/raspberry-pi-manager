@@ -1,0 +1,79 @@
+---
+- name: Verify
+  hosts: raspberry_pis
+  become: true
+  gather_facts: false
+  vars:
+    verify_paths:
+      hosts: /etc/hosts
+      locale: /etc/default/locale
+      journald: /etc/systemd/journald.conf.d/50-size.conf
+      config: /boot/firmware/config.txt
+      cmdline: /boot/firmware/cmdline.txt
+      policies: /etc/chromium/policies/managed/common.json
+      password_store: /etc/chromium.d/50-password-store
+      kiosk_browser: /usr/local/bin/kiosk-browser
+      kiosk_session: /usr/share/wayland-sessions/kiosk.desktop
+      desktop_items: /home/rcr/.config/pcmanfm/default/desktop-items-0.conf
+      shortcut: /home/rcr/Desktop/CRG Penalty Whiteboard
+      lightdm: /etc/lightdm/lightdm.conf
+  tasks:
+    - name: Read the configured files
+      ansible.builtin.slurp:
+        src: "{{ item.value }}"
+      loop: "{{ verify_paths | dict2items }}"
+      loop_control:
+        label: "{{ item.value }}"
+      register: verify_files
+
+    - name: Decode the configured files
+      ansible.builtin.set_fact:
+        verify_content: >-
+          {{ dict(verify_files.results | map(attribute='item.key')
+          | zip(verify_files.results | map(attribute='content') | map('b64decode'))) }}
+
+    - name: Check the configured files
+      ansible.builtin.assert:
+        that:
+          - "'10.0.40.100 crg' in verify_content.hosts.splitlines()"
+          - "'10.0.40.7 east-bench-pi-1' in verify_content.hosts.splitlines()"
+          - "'LANG=en_US.UTF-8' in verify_content.locale.splitlines()"
+          - "'SystemMaxUse=50M' in verify_content.journald.splitlines()"
+          - "'dtoverlay=disable-wifi-pi5' in verify_content.config.splitlines()"
+          - "'dtoverlay=disable-bt-pi5' in verify_content.config.splitlines()"
+          - "'video=HDMI-A-2:d' in verify_content.cmdline.split()"
+          - (verify_content.policies | from_json).HttpsOnlyMode == 'disallowed'
+          - (verify_content.policies | from_json).DiskCacheSize == 104857600
+          - "'--password-store=basic' in verify_content.password_store"
+          - "'http://crg:8000/views/wb/?theme=null' in verify_content.kiosk_browser"
+          - "'Exec=/usr/local/bin/kiosk-session' in verify_content.kiosk_session.splitlines()"
+          - "'wallpaper=/usr/local/share/backgrounds/rcr-background-1.png' in verify_content.desktop_items.splitlines()"
+          - "'URL=http://crg:8000/' in verify_content.shortcut.splitlines()"
+          - "'autologin-session=rpd-labwc' in verify_content.lightdm.splitlines()"
+        quiet: true
+
+    - name: Find Netplan files
+      ansible.builtin.find:
+        paths: /etc/netplan
+        patterns: "*.yaml"
+      register: verify_netplan
+
+    - name: Check the Netplan file
+      ansible.builtin.assert:
+        that:
+          - verify_netplan.files | length == 1
+          - verify_netplan.files[0].mode == '0600'
+          - verify_netplan.files[0].path is match('/etc/netplan/90-NM-[0-9a-f-]{36}\.yaml$')
+        quiet: true
+
+    - name: Check that cloud-init is disabled
+      ansible.builtin.stat:
+        path: /etc/cloud/cloud-init.disabled
+      register: verify_cloud_init
+      failed_when: not verify_cloud_init.stat.exists
+
+    - name: Parse the labwc kiosk configuration
+      ansible.builtin.command:
+        cmd: python3 -c "import sys, xml.dom.minidom; [xml.dom.minidom.parse(f) for f in sys.argv[1:]]"
+          /etc/labwc-kiosk/rc.xml /etc/labwc-kiosk/menu.xml
+      changed_when: false

@@ -3,6 +3,8 @@
   ansible.builtin.hostname:
     name: "{{ inventory_hostname }}"
     use: systemd
+  tags:
+    - molecule-notest
 
 - name: Write /etc/hosts
   ansible.builtin.template:
@@ -11,6 +13,8 @@
     owner: root
     group: root
     mode: "0644"
+    # Containers bind-mount /etc/hosts, which prevents an atomic replace.
+    unsafe_writes: true
 
 - name: Generate the locale
   community.general.locale_gen:

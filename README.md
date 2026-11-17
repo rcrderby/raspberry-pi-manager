@@ -1,5 +1,7 @@
 # Raspberry Pi Manager
 
+[![CI](https://github.com/rcrderby/raspberry-pi-manager/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rcrderby/raspberry-pi-manager/actions/workflows/ci.yml?query=branch%3Amain)
+
 Ansible-based automation to build and maintain Raspberry Pi devices for CRG displays.
 
 ## Development Environment
@@ -106,6 +108,15 @@ pre-commit run --all-files
 CI (`.github/workflows/ci.yml`) runs the same hooks in the development container image, and scans the full git history
 for secrets with gitleaks.
 
+CI also runs the Molecule scenario in `molecule/default/`. It runs `site.yml` in a Debian Trixie container with systemd,
+runs it again to check that nothing changes, and checks the resulting files. Tasks that need Raspberry Pi hardware are
+tagged `molecule-notest` and skipped; locking and unlocking are tested on hardware only. To run the scenario, Molecule
+needs access to a Docker daemon:
+
+```bash
+molecule test
+```
+
 ## Dependencies
 
 | File | Contents | Updated by |
@@ -113,7 +124,7 @@ for secrets with gitleaks.
 | `requirements.in` | Python tools | Dependabot |
 | `requirements.txt` | Python tools and their dependencies, with hashes, compiled from `requirements.in` | Dependabot |
 | `requirements.yml` | Ansible collections | Manually |
-| `.devcontainer/Dockerfile` | Base image, pinned by digest | Dependabot |
+| `.devcontainer/Dockerfile`, `molecule/default/Dockerfile` | Base images, pinned by digest | Dependabot |
 | `.pre-commit-config.yaml` | pre-commit hooks | Dependabot |
 | `.github/workflows/*.yml` | GitHub Actions, pinned by commit SHA | Dependabot |
 
