@@ -1,0 +1,60 @@
+---
+argument_specs:
+  main:
+    short_description: Installs the Chromium kiosk session and the Chromium settings shared by all sessions
+    description:
+      - The kiosk session runs labwc with its own configuration and Chromium only, with no panel or menu.
+      - Chromium restarts when it exits. Keys that leave kiosk mode are disabled, even when a page requests keyboard
+        lock; zoom keys work.
+      - When a window opens, the pointer moves to the bottom-right corner and is hidden until the mouse moves.
+      - The automatic login session is set by the session entry point.
+    options:
+      kiosk_url:
+        type: str
+        required: true
+        description: URL that Chromium opens in the kiosk session.
+      kiosk_user:
+        type: str
+        description:
+          - User who runs the kiosk session.
+          - Defaults to ansible_user.
+      kiosk_home:
+        type: str
+        description:
+          - Home directory of kiosk_user.
+          - Defaults to /home/<kiosk_user>.
+      kiosk_keyboard_model:
+        type: str
+        description:
+          - XKB keyboard model of the kiosk session.
+          - Defaults to base_keyboard_model.
+      kiosk_keyboard_layout:
+        type: str
+        description:
+          - XKB keyboard layout of the kiosk session.
+          - Defaults to base_keyboard_layout.
+      kiosk_disk_cache_size:
+        type: int
+        default: 104857600
+        description: Maximum size of the Chromium disk cache, in bytes.
+      kiosk_desktop_session:
+        type: str
+        default: rpd-labwc
+        description: Session that the session entry point selects when kiosk_session_active is false.
+      kiosk_blocked_keys:
+        type: list
+        elements: str
+        description: labwc key combinations that do nothing in the kiosk session.
+  session:
+    short_description: Selects the kiosk or desktop session for automatic login
+    description:
+      - Takes effect when the display manager restarts.
+    options:
+      kiosk_session_active:
+        type: bool
+        required: true
+        description: Select the kiosk session and its Chromium policies (true) or the desktop session (false).
+      kiosk_desktop_session:
+        type: str
+        default: rpd-labwc
+        description: Session selected when kiosk_session_active is false.

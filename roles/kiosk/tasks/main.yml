@@ -1,0 +1,64 @@
+---
+- name: Create the kiosk configuration directory
+  ansible.builtin.file:
+    path: "{{ kiosk_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write the labwc kiosk configuration
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ kiosk_config_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - autostart
+    - environment
+    - menu.xml
+    - rc.xml
+
+- name: Install the kiosk programs
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - kiosk-browser
+    - kiosk-session
+
+- name: Install the kiosk session
+  ansible.builtin.template:
+    src: kiosk.desktop.j2
+    dest: "/usr/share/wayland-sessions/{{ kiosk_session }}.desktop"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Store Chromium passwords without a keyring
+  ansible.builtin.template:
+    src: password-store.j2
+    dest: /etc/chromium.d/50-password-store
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Create the Chromium policy directory
+  ansible.builtin.file:
+    path: "{{ kiosk_policy_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write the Chromium policies
+  ansible.builtin.copy:
+    content: "{{ kiosk_common_policies | to_nice_json }}\n"
+    dest: "{{ kiosk_policy_dir }}/common.json"
+    owner: root
+    group: root
+    mode: "0644"

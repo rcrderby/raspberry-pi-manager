@@ -1,0 +1,26 @@
+---
+- name: Set the automatic login session
+  community.general.ini_file:
+    path: /etc/lightdm/lightdm.conf
+    section: "Seat:*"
+    option: autologin-session
+    value: "{{ kiosk_session if kiosk_session_active else kiosk_desktop_session }}"
+    no_extra_spaces: true
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Write the kiosk session Chromium policies
+  ansible.builtin.copy:
+    content: "{{ kiosk_session_policies | to_nice_json }}\n"
+    dest: "{{ kiosk_policy_dir }}/kiosk.json"
+    owner: root
+    group: root
+    mode: "0644"
+  when: kiosk_session_active
+
+- name: Remove the kiosk session Chromium policies
+  ansible.builtin.file:
+    path: "{{ kiosk_policy_dir }}/kiosk.json"
+    state: absent
+  when: not kiosk_session_active
