@@ -1,0 +1,31 @@
+---
+argument_specs:
+  cloud_init:
+    short_description: Writes a cloud-init network-config file for each host on the control node
+    options:
+      network_interface:
+        type: str
+        default: eth0
+        description: Wired interface name.
+      network_address:
+        type: str
+        required: true
+        description: IPv4 address of the interface.
+      network_prefix:
+        type: int
+        required: true
+        description: IPv4 prefix length.
+      network_gateway:
+        type: str
+        required: true
+        description: IPv4 default gateway.
+      network_nameservers:
+        type: list
+        elements: str
+        default: []
+        description: DNS server addresses.
+      network_cloud_init_dir:
+        type: str
+        description:
+          - Directory that receives one <host>/network-config file per host.
+          - Defaults to build/cloud-init in the repository.

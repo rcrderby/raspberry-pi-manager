@@ -1,0 +1,9 @@
+---
+ansible_host: "{{ network_address }}"
+ansible_user: rcr
+ansible_python_interpreter: /usr/bin/python3
+
+network_prefix: 24
+network_gateway: 10.0.40.1
+network_nameservers:
+  - 10.0.40.1

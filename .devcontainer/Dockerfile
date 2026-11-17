@@ -7,6 +7,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # libatomic1 is required by the Node.js that pre-commit installs on arm64.
 # en_US.UTF-8 is required by the VS Code Git extension, which runs git with LC_ALL=en_US.UTF-8.
+# sshpass is required by Ansible for SSH password authentication.
 # hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get upgrade -y \
@@ -17,6 +18,7 @@ RUN apt-get update \
         libatomic1 \
         locales \
         openssh-client \
+        sshpass \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i 's/^# *\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen \
     && locale-gen

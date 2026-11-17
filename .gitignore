@@ -3,6 +3,9 @@
 .vault_pass.*
 *.vault_pass
 
+# Generated cloud-init files
+build/
+
 # Collections and tool caches
 collections/
 .ansible/
