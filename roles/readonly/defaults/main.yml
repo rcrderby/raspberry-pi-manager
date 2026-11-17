@@ -1,0 +1,3 @@
+---
+readonly_boot_dir: /boot/firmware
+readonly_reboot_timeout: 600

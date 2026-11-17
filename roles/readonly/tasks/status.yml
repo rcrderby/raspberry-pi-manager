@@ -1,0 +1,35 @@
+---
+- name: Read the kernel command line
+  ansible.builtin.slurp:
+    src: /proc/cmdline
+  register: readonly_proc_cmdline
+
+- name: Read the kernel command line file
+  ansible.builtin.slurp:
+    src: "{{ readonly_boot_dir }}/cmdline.txt"
+  register: readonly_cmdline_file
+
+- name: Read /etc/fstab
+  ansible.builtin.slurp:
+    src: /etc/fstab
+  register: readonly_fstab
+
+- name: Read the boot partition mount options
+  ansible.builtin.command:
+    cmd: findmnt --noheadings --output OPTIONS {{ readonly_boot_dir }}
+  register: readonly_boot_mount
+  changed_when: false
+
+- name: Set the lock state
+  ansible.builtin.set_fact:
+    readonly_overlay_active: "{{ 'overlayroot=tmpfs' in (readonly_proc_cmdline.content | b64decode).split() }}"
+    readonly_overlay_configured: "{{ 'overlayroot=tmpfs' in (readonly_cmdline_file.content | b64decode).split() }}"
+    readonly_bootro_active: "{{ 'ro' in readonly_boot_mount.stdout.split(',') }}"
+    readonly_bootro_configured: >-
+      {{ (readonly_fstab.content | b64decode).splitlines()
+      | select('search', '\s' ~ readonly_boot_dir ~ '\s+\S+\s+defaults,ro(\s|,)')
+      | list | length > 0 }}
+
+- name: Set the summary lock state
+  ansible.builtin.set_fact:
+    readonly_locked: "{{ readonly_overlay_active and readonly_bootro_active }}"

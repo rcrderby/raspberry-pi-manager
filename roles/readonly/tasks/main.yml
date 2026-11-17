@@ -1,0 +1,6 @@
+---
+- name: Install overlayroot
+  ansible.builtin.apt:
+    name: overlayroot
+    state: present
+    cache_valid_time: 3600

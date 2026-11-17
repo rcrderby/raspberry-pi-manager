@@ -73,9 +73,27 @@ Each role documents its variables in `meta/argument_specs.yml`.
 | `pi_config` | Wi-Fi and Bluetooth disabled (device tree overlays), second HDMI port disabled, SSH and VNC enabled |
 | `desktop` | Wallpaper, desktop shortcuts, and keyboard layout of the desktop session |
 | `kiosk` | Kiosk session: labwc with its own configuration and Chromium only, restarted if it exits; keys that exit kiosk mode do nothing, and the mouse pointer is hidden until the mouse moves. Chromium policies, and passwords stored without a keyring |
+| `readonly` | `overlayroot` package; lock, unlock, and status steps used by `maintenance.yml` |
 
 Changes that need a reboot, such as network changes, reboot the Pi at the end of the play. The `network` role fails if
 the new address differs from the current address of the interface, unless `network_allow_address_change` is `true`.
+
+## Maintenance
+
+A locked Pi runs the kiosk session with a read-only boot partition and an overlay root file system in memory. No change
+persists across a reboot, so a locked Pi tolerates power loss. An unlocked Pi runs the desktop session.
+
+`playbooks/maintenance.yml` changes the lock state and reports it. Set the mode with `-e maintenance_mode=<mode>`:
+
+| Mode | Steps |
+| --- | --- |
+| `update` (default) | Unlock, run `site.yml`, upgrade packages, lock |
+| `unlock` | Disable the overlay, reboot, make the boot partition writable, select the desktop session |
+| `lock` | Select the kiosk session, make the boot partition read-only, enable the overlay, reboot |
+
+```bash
+ansible-playbook playbooks/maintenance.yml --ask-pass --ask-become-pass -e maintenance_mode=unlock
+```
 
 ## Checks
 
