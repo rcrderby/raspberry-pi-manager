@@ -1,0 +1,5 @@
+---
+pi_config_boot_dir: /boot/firmware
+pi_config_dtoverlays: []
+pi_config_cmdline_params:
+  - video=HDMI-A-2:d

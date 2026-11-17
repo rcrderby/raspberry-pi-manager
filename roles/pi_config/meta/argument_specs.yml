@@ -1,0 +1,22 @@
+---
+argument_specs:
+  main:
+    short_description: Configures Raspberry Pi boot settings and services
+    description:
+      - Boot setting changes take effect at the next reboot.
+    options:
+      pi_config_boot_dir:
+        type: str
+        default: /boot/firmware
+        description: Mount point of the boot partition.
+      pi_config_dtoverlays:
+        type: list
+        elements: str
+        default: []
+        description: Device tree overlays added to config.txt, such as the overlays that disable Wi-Fi and Bluetooth.
+      pi_config_cmdline_params:
+        type: list
+        elements: str
+        default:
+          - video=HDMI-A-2:d
+        description: Parameters added to the kernel command line. The default disables the second HDMI port.

@@ -1,0 +1,50 @@
+---
+- name: Add device tree overlays to config.txt
+  ansible.builtin.blockinfile:
+    path: "{{ pi_config_boot_dir }}/config.txt"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK"
+    insertafter: EOF
+    block: |
+      [all]
+      {% for overlay in pi_config_dtoverlays %}
+      dtoverlay={{ overlay }}
+      {% endfor %}
+  notify: Reboot the Pi
+
+- name: Read the kernel command line file
+  ansible.builtin.slurp:
+    src: "{{ pi_config_boot_dir }}/cmdline.txt"
+  register: pi_config_cmdline
+
+- name: Add parameters to the kernel command line
+  ansible.builtin.copy:
+    content: >-
+      {{ (((pi_config_cmdline.content | b64decode).split() | reject('in', pi_config_cmdline_params) | list)
+      + pi_config_cmdline_params) | join(' ') }}
+    dest: "{{ pi_config_boot_dir }}/cmdline.txt"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Reboot the Pi
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Disable Bluetooth services
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop:
+    - bluetooth.service
+    - hciuart.service
+  when: item in ansible_facts.services
+
+- name: Enable SSH and VNC
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - ssh.service
+    - wayvnc.service
