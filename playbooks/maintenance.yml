@@ -3,6 +3,7 @@
 #   update (default): unlock, run site.yml, upgrade packages, lock
 #   unlock: unlock only
 #   lock: lock only
+#   status: report the lock state only
 - name: Check the maintenance mode
   hosts: raspberry_pis
   gather_facts: false
@@ -10,8 +11,8 @@
     - name: Check the maintenance mode
       ansible.builtin.assert:
         that:
-          - maintenance_mode | default('update') in ['update', 'unlock', 'lock']
-        fail_msg: "maintenance_mode must be update, unlock, or lock."
+          - maintenance_mode | default('update') in ['update', 'unlock', 'lock', 'status']
+        fail_msg: "maintenance_mode must be update, unlock, lock, or status."
         quiet: true
 
 - name: Unlock
