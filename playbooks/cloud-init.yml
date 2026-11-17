@@ -1,0 +1,9 @@
+---
+- name: Write cloud-init network-config files
+  hosts: raspberry_pis
+  gather_facts: false
+  tasks:
+    - name: Write network-config
+      ansible.builtin.include_role:
+        name: network
+        tasks_from: cloud_init

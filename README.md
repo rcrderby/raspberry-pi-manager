@@ -1,4 +1,4 @@
-# raspberry-pi-manager
+# Raspberry Pi Manager
 
 Ansible-based automation to build and maintain Raspberry Pi devices for CRG displays.
 
@@ -18,6 +18,49 @@ After the container is created, `.devcontainer/post-create.sh` installs the appr
 
 Named volumes hold the Ansible collections (`collections/`), the pre-commit hook environments, and `~/.ssh`, so they persist
 across container rebuilds.
+
+## Inventory
+
+`inventory/hosts.yml` lists the Pis in the `raspberry_pis` group, with child groups by model (`pi5`, `pi4`).
+
+| File | Contents |
+| --- | --- |
+| `inventory/group_vars/raspberry_pis.yml` | Settings shared by all Pis |
+| `inventory/group_vars/pi5.yml`, `pi4.yml` | Model-specific settings |
+| `inventory/host_vars/<host>.yml` | Per-Pi settings, including IPv4 |
+
+To add a Pi, add it to a model group in `inventory/hosts.yml` and create its `host_vars` file.
+
+## New Pi
+
+1. Write Raspberry Pi OS (64-bit) to the SD card with Raspberry Pi Imager, with the hostname, the user `rcr` with a
+   password, and SSH with password authentication.
+2. Write the cloud-init network configuration for each Pi:
+
+   ```bash
+   ansible-playbook playbooks/cloud-init.yml
+   ```
+
+3. Copy `build/cloud-init/<host>/network-config` to the `bootfs` partition of the SD card, replacing the existing file.
+4. Boot the Pi.
+
+## Running playbooks
+
+Playbooks run in the development container. Ansible prompts for the SSH password and the sudo password; the sudo prompt
+defaults to the SSH password.
+
+```bash
+ansible-playbook playbooks/site.yml --ask-pass --ask-become-pass
+```
+
+`site.yml` stops if a Pi's hardware model does not match its inventory group, or if the Pi is locked.
+
+Ansible saves the host key of a Pi on first connection and refuses a changed host key. After a Pi is reimaged, remove its
+old host key:
+
+```bash
+ssh-keygen -R <address>
+```
 
 ## Checks
 

@@ -1,0 +1,4 @@
+---
+network_interface: eth0
+network_nameservers: []
+network_cloud_init_dir: "{{ (playbook_dir ~ '/../build/cloud-init') | realpath }}"
