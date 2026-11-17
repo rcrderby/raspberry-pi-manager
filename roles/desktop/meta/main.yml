@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  author: rcrderby
+  description: Raspberry Pi desktop wallpaper, shortcuts, and keyboard layout
+  license: Apache-2.0
+  min_ansible_version: "2.22"
+  platforms:
+    - name: Debian
+      versions:
+        - trixie
+dependencies: []

@@ -1,0 +1,7 @@
+---
+- name: Restart the desktop
+  ansible.builtin.command:
+    cmd: pkill --uid {{ desktop_user }} --full "^pcmanfm --desktop"
+  register: desktop_pkill
+  changed_when: desktop_pkill.rc == 0
+  failed_when: desktop_pkill.rc > 1

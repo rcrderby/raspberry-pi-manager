@@ -1,0 +1,8 @@
+---
+desktop_user: "{{ ansible_user }}"
+desktop_home: "/home/{{ desktop_user }}"
+desktop_keyboard_model: "{{ base_keyboard_model | default('pc105') }}"
+desktop_keyboard_layout: "{{ base_keyboard_layout | default('us') }}"
+desktop_wallpaper: ""
+desktop_wallpaper_mode: crop
+desktop_shortcuts: []
