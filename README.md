@@ -62,6 +62,18 @@ old host key:
 ssh-keygen -R <address>
 ```
 
+## Roles
+
+Each role documents its variables in `meta/argument_specs.yml`.
+
+| Role | Configures |
+| --- | --- |
+| `base` | Hostname, `/etc/hosts`, locale, time zone, console keyboard, journal size; disables cloud-init |
+| `network` | Static IPv4 address of the wired interface, in a Netplan file in the format NetworkManager writes |
+
+Changes that need a reboot, such as network changes, reboot the Pi at the end of the play. The `network` role fails if
+the new address differs from the current address of the interface, unless `network_allow_address_change` is `true`.
+
 ## Checks
 
 The pre-commit hooks run on every commit. To run them manually on every file in the repository:

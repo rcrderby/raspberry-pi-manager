@@ -2,3 +2,6 @@
 network_interface: eth0
 network_nameservers: []
 network_cloud_init_dir: "{{ (playbook_dir ~ '/../build/cloud-init') | realpath }}"
+network_connection_uuid: "{{ (inventory_hostname ~ '-' ~ network_interface) | to_uuid }}"
+network_netplan_file: "/etc/netplan/90-NM-{{ network_connection_uuid }}.yaml"
+network_allow_address_change: false

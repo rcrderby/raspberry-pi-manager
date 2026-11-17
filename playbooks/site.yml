@@ -26,3 +26,7 @@
           - "'overlayroot=tmpfs' not in (site_cmdline.content | b64decode)"
         fail_msg: "{{ inventory_hostname }} is locked. Unlock it before running this playbook."
         quiet: true
+
+  roles:
+    - base
+    - network

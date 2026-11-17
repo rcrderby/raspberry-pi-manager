@@ -1,0 +1,74 @@
+---
+- name: Set the hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+    use: systemd
+
+- name: Write /etc/hosts
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Generate the locale
+  community.general.locale_gen:
+    name: "{{ base_locale }}"
+    state: present
+
+- name: Set the system locale
+  ansible.builtin.lineinfile:
+    path: /etc/default/locale
+    regexp: "^LANG="
+    line: "LANG={{ base_locale }}"
+    owner: root
+    group: root
+    mode: "0644"
+    create: true
+
+- name: Set the time zone
+  community.general.timezone:
+    name: "{{ base_timezone }}"
+
+- name: Set the console keyboard
+  ansible.builtin.lineinfile:
+    path: /etc/default/keyboard
+    regexp: "^{{ item.key }}="
+    line: '{{ item.key }}="{{ item.value }}"'
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - key: XKBMODEL
+      value: "{{ base_keyboard_model }}"
+    - key: XKBLAYOUT
+      value: "{{ base_keyboard_layout }}"
+  loop_control:
+    label: "{{ item.key }}"
+  notify: Apply the console keyboard
+
+- name: Create the journald drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Limit the journal size
+  ansible.builtin.template:
+    src: journald-size.conf.j2
+    dest: /etc/systemd/journald.conf.d/50-size.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart journald
+
+- name: Disable cloud-init
+  ansible.builtin.copy:
+    content: ""
+    dest: /etc/cloud/cloud-init.disabled
+    owner: root
+    group: root
+    mode: "0644"
