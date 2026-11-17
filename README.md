@@ -2,144 +2,161 @@
 
 [![CI](https://github.com/rcrderby/raspberry-pi-manager/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rcrderby/raspberry-pi-manager/actions/workflows/ci.yml?query=branch%3Amain)
 
-Ansible-based automation to build and maintain Raspberry Pi devices for CRG displays.
+## Overview
 
-## Development Environment
+The Ansible automation in this repo provisions and maintains Raspberry Pis that display CRG screens.
 
-A development container is available and defined in `.devcontainer/`, and it requires:
+### Kiosk/Locked Mode
+
+Each Pi runs Raspberry Pi OS (64-bit) and starts in kiosk mode, where Chromium displays a CRG page full screen without any desktop interaction.  In this mode, the Pi is locked with its boot partition in read-only mode, which allows it to tolerate power losses without corrupting the OS or file system.
+
+In kiosk mode, the Pi accepts commands from a USB keyboard or through a VNC session that tell Chromium to:
+
+- Reload the page (Ctrl+R or F5)
+- Zoom in (Ctrl+=)
+- Zoom out (Ctrl+-)
+- Reset the zoom to 100% (Ctrl+0)
+
+### Unlocked Mode
+
+Unlocking a Pi starts the Raspberry Pi desktop, for maintenance, updates, etc.  In this mode, the Pi will not automatically launch Chromium.
+
+## Getting Started
+
+### Ansible Playbooks
+
+| Playbook | Purpose |
+| --- | --- |
+| `playbooks/cloud-init.yml` | Writes the network configuration for the SD card of each new Pi |
+| `playbooks/maintenance.yml` | Configures, updates, locks, and unlocks Pis |
+| `playbooks/site.yml` | Configures unlocked Pis; run by the `maintenance.yml` playbook |
+
+### Environment Setup
+
+The playbooks run from a computer on the same network as the Pis. That network must have internet access to install Pi updates. Run all Ansible commands from the root of the repository.
+
+### Credentials
+
+All Pis share one password for the user `rcr`. Ansible prompts for the password for SSH connectivity, and again for sudo access.
+
+#### Development Container
+
+The development container in `.devcontainer/` has every tool the playbooks need. It requires:
 
 1. Docker
-2. The VS Code [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers "VS Code Dev Containers Extension") extension.
+2. The VS Code [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers "VS Code Dev Containers Extension") extension
 
-To use the development container:
+To use it:
 
-1. Open the repository in VS Code.
+1. Clone and open this repository in VS Code.
 2. Run **Dev Containers: Reopen in Container**.
+3. Run Ansible commands in the VS Code terminal.
 
-After the container is created, `.devcontainer/post-create.sh` installs the appropriate Ansible collections and the pre-commit hooks.
+#### Separate Ansible Installation
 
-Named volumes hold the Ansible collections (`collections/`), the pre-commit hook environments, and `~/.ssh`, so they persist
-across container rebuilds.
+To run the playbooks without the development container, install Python 3.13 (or later) and `sshpass`, then use these commands to install the required tools and Ansible collections:
 
-## Inventory
+```bash
+python3 -m venv .venv
+```
 
-`inventory/hosts.yml` lists the Pis in the `raspberry_pis` group, with child groups by model (`pi5`, `pi4`).
+```bash
+source .venv/bin/activate
+```
 
-| File | Contents |
-| --- | --- |
-| `inventory/group_vars/raspberry_pis.yml` | Settings shared by all Pis |
-| `inventory/group_vars/pi5.yml`, `pi4.yml` | Model-specific settings |
-| `inventory/host_vars/<host>.yml` | Per-Pi settings, including IPv4 |
+```bash
+pip install -r requirements.txt
+```
 
-To add a Pi, add it to a model group in `inventory/hosts.yml` and create its `host_vars` file.
+```bash
+scripts/install-collections.sh
+```
 
-## New Pi
+Activate the virtual environment with `source .venv/bin/activate`.
 
-1. Write Raspberry Pi OS (64-bit) to the SD card with Raspberry Pi Imager, with the hostname, the user `rcr` with a
-   password, and SSH with password authentication.
-2. Write the cloud-init network configuration for each Pi:
+### New Pi Provisioning
+
+To provision several Pis at once, repeat steps 1–6 for each Pi, then run step 7 once.
+
+1. **Add the Pi to the Ansible inventory.** Skip this step for a Pi that is already in the inventory.
+   1. Add the hostname to the model group in `inventory/hosts.yml`: `pi5` or `pi4`.
+   2. Create `inventory/host_vars/<hostname>.yml` with the Pi's IP address and CRG page.  For example:
+
+      ```yaml
+      ---
+      network_address: 10.0.40.X
+      kiosk_url: http://crg:8000/views/wb/?theme=null
+      ```
+
+2. **Create the network configuration file.** This writes `build/cloud-init/<hostname>/network-config` files or every Pi in the inventory:
 
    ```bash
    ansible-playbook playbooks/cloud-init.yml
    ```
 
-3. Copy `build/cloud-init/<host>/network-config` to the `bootfs` partition of the SD card, replacing the existing file.
-4. Boot the Pi.
+3. **Install the Raspberry Pi Image on the SD card** with [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
 
-## Running playbooks
+   | Setting | Value |
+   | --- | --- |
+   | Device | Raspberry Pi 5 or Raspberry Pi 4, to match the Pi hardware |
+   | Operating system | Raspberry Pi OS (64-bit) |
+   | Hostname | The hostname from the inventory, such as `north-wall-pi-1` |
+   | User name and password | `rcr` and the shared password |
+   | Wi-Fi | None |
+   | SSH | Enabled, with password authentication |
+   | Raspberry Pi Connect | Disabled |
 
-Playbooks run in the development container. Ansible prompts for the SSH password and the sudo password; the sudo prompt
-defaults to the SSH password.
+4. **Copy the network configuration file** to the SD card. Open the `bootfs` volume of the SD card, and replace the default `network-config` file with the `build/cloud-init/<hostname>/network-config` file. Eject the SD card.
 
-```bash
-ansible-playbook playbooks/site.yml --ask-pass --ask-become-pass
-```
+5. **Start the Pi.** Insert the SD card, connect the Pi to the network, and connect the display to the HDMI port next to the USB-C power port (HDMI 1); the other HDMI port is disabled. Connect power the Pi to power. After a few minutes, the Pi responds to pings:
 
-`site.yml` stops if a Pi's hardware model does not match its inventory group, or if the Pi is locked.
+   ```bash
+   ping -c 1 10.0.40.X
+   ```
 
-Ansible saves the host key of a Pi on first connection and refuses a changed host key. After a Pi is reimaged, remove its
-old host key:
+6. **Remove the old host key** if you're using IP address that was previously in use:
 
-```bash
-ssh-keygen -R <address>
-```
+   ```bash
+   ssh-keygen -R 10.0.40.X
+   ```
 
-## Roles
+7. **Configure and lock the Pi.** Run `maintenance.yml` with the `--limit` parameter and the hostname. To provision several Pis, separate the hostnames with commas, or omit the `--limit` parameter to provision every Pi in the inventory:
 
-Each role documents its variables in `meta/argument_specs.yml`.
+   ```bash
+   ansible-playbook playbooks/maintenance.yml --ask-pass --ask-become-pass --limit east-bench-pi-1
+   ```
 
-| Role | Configures |
-| --- | --- |
-| `base` | Hostname, `/etc/hosts`, locale, time zone, console keyboard, journal size; disables cloud-init |
-| `network` | Static IPv4 address of the wired interface, in a Netplan file in the format NetworkManager writes |
-| `pi_config` | Wi-Fi and Bluetooth disabled (device tree overlays), second HDMI port disabled, SSH and VNC enabled |
-| `desktop` | Wallpaper, desktop shortcuts, and keyboard layout of the desktop session |
-| `kiosk` | Kiosk session: labwc with its own configuration and Chromium only, restarted if it exits; keys that exit kiosk mode do nothing, and the mouse pointer is hidden until the mouse moves. Chromium policies, and passwords stored without a keyring |
-| `readonly` | `overlayroot` package; lock, unlock, and status steps used by `maintenance.yml` |
+   The playbook configures the Pi, upgrades its packages, and locks the OS. The Pi reboots several times during this process.
 
-Changes that need a reboot, such as network changes, reboot the Pi at the end of the play. The `network` role fails if
-the new address differs from the current address of the interface, unless `network_allow_address_change` is `true`.
+### Pi Maintenance
 
-## Maintenance
-
-A locked Pi runs the kiosk session with a read-only boot partition and an overlay root file system in memory. No change
-persists across a reboot, so a locked Pi tolerates power loss. An unlocked Pi runs the desktop session.
-
-`playbooks/maintenance.yml` changes the lock state and reports it. Set the mode with `-e maintenance_mode=<mode>`:
-
-| Mode | Steps |
-| --- | --- |
-| `update` (default) | Unlock, run `site.yml`, upgrade packages, lock |
-| `unlock` | Disable the overlay, reboot, make the boot partition writable, select the desktop session |
-| `lock` | Select the kiosk session, make the boot partition read-only, enable the overlay, reboot |
+Every maintenance task uses the `playbooks/maintenance.yml` playbook. Without the `--limit` parameter, it includes every Pi. To include a subset of Pis, add `--limit` with hostnames separated by commas, or with an inventory group:
 
 ```bash
-ansible-playbook playbooks/maintenance.yml --ask-pass --ask-become-pass -e maintenance_mode=unlock
+# Perform maintenance on north-wall-pi-1 and main-scoreboard-pi-1
+ansible-playbook playbooks/maintenance.yml --ask-pass --ask-become-pass --limit north-wall-pi-1,main-scoreboard-pi-1
 ```
-
-## Checks
-
-The pre-commit hooks run on every commit. To run them manually on every file in the repository:
 
 ```bash
-pre-commit run --all-files
+# Perform maintenance on all Raspberry Pi 5 devices
+ansible-playbook playbooks/maintenance.yml --ask-pass --ask-become-pass --limit pi5
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same hooks in the development container image, and scans the full git history
-for secrets with gitleaks.
-
-CI also runs the Molecule scenario in `molecule/default/`. It runs `site.yml` in a Debian Trixie container with systemd,
-runs it again to check that nothing changes, and checks the resulting files. Tasks that need Raspberry Pi hardware are
-tagged `molecule-notest` and skipped; locking and unlocking are tested on hardware only. To run the scenario, Molecule
-needs access to a Docker daemon:
-
-```bash
-molecule test
-```
-
-## Dependencies
-
-| File | Contents | Updated by |
+| Task | Options | Result |
 | --- | --- | --- |
-| `requirements.in` | Python tools | Dependabot |
-| `requirements.txt` | Python tools and their dependencies, with hashes, compiled from `requirements.in` | Dependabot |
-| `requirements.yml` | Ansible collections | Manually |
-| `.devcontainer/Dockerfile`, `molecule/default/Dockerfile` | Base images, pinned by digest | Dependabot |
-| `.pre-commit-config.yaml` | pre-commit hooks | Dependabot |
-| `.github/workflows/*.yml` | GitHub Actions, pinned by commit SHA | Dependabot |
+| Update Pis | None | Unlocks, applies inventory settings, upgrades packages, and locks |
+| Change a setting, such as `kiosk_url` | None, after editing the inventory | Same as updating the Pis |
+| Unlock for work on the desktop | `-e maintenance_mode=unlock` | Reboots into the desktop |
+| Lock after work on the desktop | `-e maintenance_mode=lock` | Reboots into kiosk mode |
+| Show the lock state | `-e maintenance_mode=lock` | Reports `<hostname> is locked.` and locks any unlocked Pi |
+| Replace or re-image an SD card | Not applicable | Follow steps 2–7 of [New Pi Provisioning](#new-pi-provisioning) |
 
-To compile `requirements.txt` after changing `requirements.in`, run this command in the development container:
+Note: upgrading packages requires internet access.
 
-```bash
-pip-compile --allow-unsafe --generate-hashes --strip-extras requirements.in
-```
+If Ansible cannot reach one or more Pis, the playbook continues running against any reachable Pis, and will list failures in the `PLAY RECAP`.
 
-Afterward, rebuild the container.
+`playbooks/site.yml` stops if a Pi is locked, or if its hardware model does not match its model group in the inventory.
 
-## Secrets
+## Development
 
-Files named `vault*.yml` or `vault*.yaml` must be encrypted with Ansible Vault. The vault password is not stored in the repository.
-
-## License
-
-[Apache License 2.0](LICENSE)
+The roles, checks, dependencies, and secrets are described in [docs/development.md](docs/development.md).
