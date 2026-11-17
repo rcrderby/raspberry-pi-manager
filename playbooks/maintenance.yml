@@ -1,0 +1,67 @@
+---
+# Modes, set with -e maintenance_mode=<mode>:
+#   update (default): unlock, run site.yml, upgrade packages, lock
+#   unlock: unlock only
+#   lock: lock only
+- name: Check the maintenance mode
+  hosts: raspberry_pis
+  gather_facts: false
+  tasks:
+    - name: Check the maintenance mode
+      ansible.builtin.assert:
+        that:
+          - maintenance_mode | default('update') in ['update', 'unlock', 'lock']
+        fail_msg: "maintenance_mode must be update, unlock, or lock."
+        quiet: true
+
+- name: Unlock
+  hosts: raspberry_pis
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Unlock the Pi
+      ansible.builtin.include_role:
+        name: readonly
+        tasks_from: unlock
+      when: maintenance_mode | default('update') in ['update', 'unlock']
+
+- name: Configure
+  ansible.builtin.import_playbook: site.yml
+  when: maintenance_mode | default('update') == 'update'
+
+- name: Upgrade
+  hosts: raspberry_pis
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Upgrade packages
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+        autoremove: true
+      when: maintenance_mode | default('update') == 'update'
+
+- name: Lock
+  hosts: raspberry_pis
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Lock the Pi
+      ansible.builtin.include_role:
+        name: readonly
+        tasks_from: lock
+      when: maintenance_mode | default('update') in ['update', 'lock']
+
+- name: Report
+  hosts: raspberry_pis
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Read the lock state
+      ansible.builtin.include_role:
+        name: readonly
+        tasks_from: status
+
+    - name: Report the lock state
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} is {{ 'locked' if readonly_locked else 'unlocked' }}."

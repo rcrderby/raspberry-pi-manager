@@ -1,0 +1,51 @@
+---
+- name: Install overlayroot
+  ansible.builtin.apt:
+    name: overlayroot
+    state: present
+    cache_valid_time: 3600
+  when: not ansible_check_mode
+
+- name: Read the lock state
+  ansible.builtin.include_tasks: status.yml
+
+- name: Lock the Pi
+  when: not readonly_overlay_active
+  block:
+    - name: Select the kiosk session
+      ansible.builtin.include_role:
+        name: kiosk
+        tasks_from: session
+      vars:
+        kiosk_session_active: true
+
+    - name: Stop the display manager
+      ansible.builtin.systemd_service:
+        name: lightdm
+        state: stopped
+
+    - name: Make the boot partition read-only at boot
+      ansible.builtin.command:
+        cmd: raspi-config nonint enable_bootro
+      when: not readonly_bootro_configured
+      changed_when: true
+
+    - name: Enable the overlay file system
+      ansible.builtin.command:
+        cmd: raspi-config nonint enable_overlayfs
+      when: not readonly_overlay_configured
+      changed_when: true
+
+    - name: Reboot into the locked state
+      ansible.builtin.reboot:
+        reboot_timeout: "{{ readonly_reboot_timeout }}"
+
+    - name: Read the new lock state
+      ansible.builtin.include_tasks: status.yml
+
+    - name: Check that the Pi is locked
+      ansible.builtin.assert:
+        that:
+          - readonly_locked
+        fail_msg: "{{ inventory_hostname }} did not lock."
+        quiet: true
