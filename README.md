@@ -12,10 +12,10 @@ Each Pi runs Raspberry Pi OS (64-bit) and starts in kiosk mode, where Chromium d
 
 In kiosk mode, the Pi accepts commands from a USB keyboard or through a VNC session that tell Chromium to:
 
-- Reload the page (Ctrl+R or F5)
-- Zoom in (Ctrl+=)
-- Zoom out (Ctrl+-)
-- Reset the zoom to 100% (Ctrl+0)
+- Reload the page (`Ctrl` + `R` or `F5`)
+- Zoom in (`Ctrl` + `=`)
+- Zoom out (`Ctrl` + `-`)
+- Reset the zoom to 100% (`Ctrl` + `0`)
 
 ### Unlocked Mode
 
