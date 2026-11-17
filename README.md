@@ -10,6 +10,8 @@ The Ansible automation in this repo provisions and maintains Raspberry Pis that 
 
 Each Pi runs Raspberry Pi OS (64-bit) and starts in kiosk mode, where Chromium displays a CRG page full screen without any desktop interaction. In this mode, the Pi is locked: its boot partition is read-only, and changes to its root file system are kept in memory and discarded at reboot, which allows it to tolerate power losses without corrupting the OS or file system.
 
+At startup, Chromium shows a countdown, then opens the CRG page once the CRG server responds. If the server does not respond, Chromium shows a countdown to the next attempt.
+
 In kiosk mode, the Pi accepts commands from a USB keyboard or through a VNC session that tell Chromium to:
 
 - Reload the page (`Ctrl` + `R` or `F5`)

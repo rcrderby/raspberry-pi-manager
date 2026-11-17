@@ -4,6 +4,8 @@ argument_specs:
     short_description: Installs the Chromium kiosk session and the Chromium settings shared by all sessions
     description:
       - The kiosk session runs labwc with its own configuration and Chromium only, with no panel or menu.
+      - Chromium opens a start page that counts down kiosk_start_delay, then opens kiosk_url once the CRG server
+        responds, and counts down kiosk_retry_interval between attempts.
       - Chromium restarts when it exits. Keys that leave kiosk mode are disabled, even when a page requests keyboard
         lock; zoom keys work.
       - When a window opens, the pointer moves to the bottom-right corner and is hidden until the mouse moves.
@@ -41,6 +43,18 @@ argument_specs:
         type: str
         default: rpd-labwc
         description: Session that the session entry point selects when kiosk_session_active is false.
+      kiosk_start_delay:
+        type: int
+        default: 30
+        description: Seconds that the start page counts down before the first attempt to reach kiosk_url.
+      kiosk_retry_interval:
+        type: int
+        default: 10
+        description: Seconds that the start page counts down between attempts to reach kiosk_url.
+      kiosk_check_timeout:
+        type: int
+        default: 5
+        description: Seconds that the start page waits for the CRG server to respond on each attempt.
       kiosk_blocked_keys:
         type: list
         elements: str

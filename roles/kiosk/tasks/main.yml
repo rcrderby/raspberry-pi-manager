@@ -31,6 +31,22 @@
     - kiosk-browser
     - kiosk-session
 
+- name: Create the start page directory
+  ansible.builtin.file:
+    path: "{{ kiosk_start_page | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the start page
+  ansible.builtin.template:
+    src: start.html.j2
+    dest: "{{ kiosk_start_page }}"
+    owner: root
+    group: root
+    mode: "0644"
+
 - name: Install the kiosk session
   ansible.builtin.template:
     src: kiosk.desktop.j2

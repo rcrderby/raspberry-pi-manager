@@ -13,6 +13,7 @@
       policies: /etc/chromium/policies/managed/common.json
       password_store: /etc/chromium.d/50-password-store
       kiosk_browser: /usr/local/bin/kiosk-browser
+      start_page: /usr/local/share/kiosk/start.html
       kiosk_session: /usr/share/wayland-sessions/kiosk.desktop
       desktop_items: /home/rcr/.config/pcmanfm/default/desktop-items-0.conf
       shortcut: /home/rcr/Desktop/CRG Penalty Whiteboard
@@ -45,7 +46,8 @@
           - (verify_content.policies | from_json).HttpsOnlyMode == 'disallowed'
           - (verify_content.policies | from_json).DiskCacheSize == 104857600
           - "'--password-store=basic' in verify_content.password_store"
-          - "'http://crg:8000/views/wb/?theme=null' in verify_content.kiosk_browser"
+          - "'file:///usr/local/share/kiosk/start.html' in verify_content.kiosk_browser"
+          - "'const target = \"http://crg:8000/views/wb/?theme=null\";' in verify_content.start_page"
           - "'Exec=/usr/local/bin/kiosk-session' in verify_content.kiosk_session.splitlines()"
           - "'wallpaper=/usr/local/share/backgrounds/rcr-background-1.png' in verify_content.desktop_items.splitlines()"
           - "'URL=http://crg:8000/' in verify_content.shortcut.splitlines()"
