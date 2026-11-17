@@ -3,7 +3,7 @@
   ansible.builtin.include_tasks: status.yml
 
 - name: Disable the overlay file system
-  when: readonly_overlay_active or readonly_overlay_configured
+  when: readonly_os_overlay_active or readonly_os_overlay_configured
   block:
     - name: Disable the overlay file system at boot
       ansible.builtin.command:
@@ -12,7 +12,7 @@
 
     - name: Reboot without the overlay file system
       ansible.builtin.reboot:
-        reboot_timeout: "{{ readonly_reboot_timeout }}"
+        reboot_timeout: "{{ readonly_os_reboot_timeout }}"
 
     - name: Read the new lock state
       ansible.builtin.include_tasks: status.yml
@@ -20,22 +20,22 @@
 - name: Make the boot partition writable at boot
   ansible.builtin.command:
     cmd: raspi-config nonint disable_bootro
-  when: readonly_bootro_configured
+  when: readonly_os_bootro_configured
   changed_when: true
 
 - name: Make the boot partition writable now
   ansible.posix.mount:
-    path: "{{ readonly_boot_dir }}"
+    path: "{{ readonly_os_boot_dir }}"
     opts: rw
     state: remounted
-  when: readonly_bootro_active
+  when: readonly_os_bootro_active
 
 - name: Find the kiosk session
   ansible.builtin.command:
     cmd: pgrep --full "^/usr/bin/labwc --config-dir"
-  register: readonly_kiosk_running
+  register: readonly_os_kiosk_running
   changed_when: false
-  failed_when: readonly_kiosk_running.rc > 1
+  failed_when: readonly_os_kiosk_running.rc > 1
 
 - name: Select the desktop session
   ansible.builtin.include_role:
@@ -48,7 +48,7 @@
   ansible.builtin.systemd_service:
     name: lightdm
     state: restarted
-  when: readonly_kiosk_running.rc == 0
+  when: readonly_os_kiosk_running.rc == 0
 
 - name: Read the new lock state
   ansible.builtin.include_tasks: status.yml
@@ -56,7 +56,7 @@
 - name: Check that the Pi is unlocked
   ansible.builtin.assert:
     that:
-      - not readonly_overlay_active
-      - not readonly_bootro_active
+      - not readonly_os_overlay_active
+      - not readonly_os_bootro_active
     fail_msg: "{{ inventory_hostname }} did not unlock."
     quiet: true
