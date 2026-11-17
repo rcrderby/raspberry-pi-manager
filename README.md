@@ -150,7 +150,7 @@ ansible-playbook playbooks/maintenance.yml --ask-pass --ask-become-pass --limit 
 | Change a setting, such as `kiosk_url` | None, after editing the inventory | Same as updating the Pis |
 | Unlock for work on the desktop | `-e maintenance_mode=unlock` | Reboots into the desktop |
 | Lock after work on the desktop | `-e maintenance_mode=lock` | Reboots into kiosk mode |
-| Show the lock state | `-e maintenance_mode=lock` | Reports `<hostname> is locked.` and locks any unlocked Pi |
+| Show the lock state | `-e maintenance_mode=status` | Reports `<hostname> is locked.` or `<hostname> is unlocked.` |
 | Replace or re-image an SD card | Not applicable | Follow steps 2–7 of [New Pi Provisioning](#new-pi-provisioning) |
 
 Note: upgrading packages and locking Pis require internet access.
