@@ -13,3 +13,10 @@ base_hosts:
   - address: 10.0.40.100
     names:
       - crg
+
+desktop_wallpaper: rcr-background-1.png
+desktop_shortcuts:
+  - name: CRG Penalty Whiteboard
+    comment: Open the CRG Penalty Whiteboard Display
+    url: http://crg:8000/
+    icon: rcr-star.png

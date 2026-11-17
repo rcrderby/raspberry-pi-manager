@@ -1,0 +1,88 @@
+---
+- name: Create the image directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ desktop_wallpaper_dir }}"
+    - "{{ desktop_icon_dir }}"
+
+- name: Install the wallpaper
+  ansible.builtin.copy:
+    src: "{{ desktop_wallpaper }}"
+    dest: "{{ desktop_wallpaper_dir }}/{{ desktop_wallpaper }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: desktop_wallpaper | length > 0
+
+- name: Install the shortcut icons
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ desktop_icon_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ desktop_shortcuts | map(attribute='icon') | unique }}"
+
+- name: Create the user configuration directories
+  ansible.builtin.file:
+    path: "{{ desktop_home }}/{{ item.path }}"
+    state: directory
+    owner: "{{ desktop_user }}"
+    group: "{{ desktop_user }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - path: .config
+      mode: "0775"
+    - path: .config/labwc
+      mode: "0755"
+    - path: .config/pcmanfm
+      mode: "0755"
+    - path: .config/pcmanfm/default
+      mode: "0755"
+    - path: Desktop
+      mode: "0775"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Set the wallpaper
+  ansible.builtin.template:
+    src: desktop-items.conf.j2
+    dest: "{{ desktop_home }}/.config/pcmanfm/default/desktop-items-0.conf"
+    owner: "{{ desktop_user }}"
+    group: "{{ desktop_user }}"
+    mode: "0644"
+  when: desktop_wallpaper | length > 0
+  notify: Restart the desktop
+
+- name: Add the desktop shortcuts
+  ansible.builtin.template:
+    src: shortcut.desktop.j2
+    dest: "{{ desktop_home }}/Desktop/{{ item.name }}"
+    owner: "{{ desktop_user }}"
+    group: "{{ desktop_user }}"
+    mode: "0644"
+  loop: "{{ desktop_shortcuts }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Set the keyboard of the desktop session
+  ansible.builtin.lineinfile:
+    path: "{{ desktop_home }}/.config/labwc/environment"
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+    owner: "{{ desktop_user }}"
+    group: "{{ desktop_user }}"
+    mode: "0644"
+    create: true
+  loop:
+    - key: XKB_DEFAULT_MODEL
+      value: "{{ desktop_keyboard_model }}"
+    - key: XKB_DEFAULT_LAYOUT
+      value: "{{ desktop_keyboard_layout }}"
+  loop_control:
+    label: "{{ item.key }}"

@@ -1,0 +1,63 @@
+---
+argument_specs:
+  main:
+    short_description: Configures the Raspberry Pi desktop session of the desktop user
+    options:
+      desktop_user:
+        type: str
+        description:
+          - User whose desktop is configured.
+          - Defaults to ansible_user.
+      desktop_home:
+        type: str
+        description:
+          - Home directory of desktop_user.
+          - Defaults to /home/<desktop_user>.
+      desktop_keyboard_model:
+        type: str
+        description:
+          - XKB keyboard model of the desktop session.
+          - Defaults to base_keyboard_model.
+      desktop_keyboard_layout:
+        type: str
+        description:
+          - XKB keyboard layout of the desktop session.
+          - Defaults to base_keyboard_layout.
+      desktop_wallpaper:
+        type: str
+        default: ""
+        description: Wallpaper image in the role's files directory. An empty value leaves the desktop settings unmanaged.
+      desktop_wallpaper_mode:
+        type: str
+        default: crop
+        choices:
+          - color
+          - stretch
+          - fit
+          - crop
+          - center
+          - tile
+          - screen
+        description: How the wallpaper fills the screen.
+      desktop_shortcuts:
+        type: list
+        elements: dict
+        default: []
+        description: Desktop shortcuts that open a URL.
+        options:
+          name:
+            type: str
+            required: true
+            description: Shortcut label and file name.
+          comment:
+            type: str
+            default: ""
+            description: Shortcut tooltip.
+          url:
+            type: str
+            required: true
+            description: URL that the shortcut opens.
+          icon:
+            type: str
+            required: true
+            description: Icon image in the role's files directory.
