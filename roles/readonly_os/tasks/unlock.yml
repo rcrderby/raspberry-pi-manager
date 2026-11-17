@@ -2,8 +2,13 @@
 - name: Read the lock state
   ansible.builtin.include_tasks: status.yml
 
+# Set once, so the steps after the reboot still run when the lock state changes.
+- name: Record whether the overlay file system needs disabling
+  ansible.builtin.set_fact:
+    readonly_os_overlay_disable_needed: "{{ readonly_os_overlay_active or readonly_os_overlay_configured }}"
+
 - name: Disable the overlay file system
-  when: readonly_os_overlay_active or readonly_os_overlay_configured
+  when: readonly_os_overlay_disable_needed
   block:
     - name: Disable the overlay file system at boot
       ansible.builtin.command:
