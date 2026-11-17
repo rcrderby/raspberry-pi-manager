@@ -5,6 +5,9 @@ kiosk_keyboard_model: "{{ base_keyboard_model | default('pc105') }}"
 kiosk_keyboard_layout: "{{ base_keyboard_layout | default('us') }}"
 kiosk_disk_cache_size: 104857600
 kiosk_desktop_session: rpd-labwc
+kiosk_start_delay: 30
+kiosk_retry_interval: 10
+kiosk_check_timeout: 5
 kiosk_blocked_keys:
   - A-F4
   - C-F4

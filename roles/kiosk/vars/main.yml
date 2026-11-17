@@ -2,6 +2,7 @@
 kiosk_config_dir: /etc/labwc-kiosk
 kiosk_session: kiosk
 kiosk_policy_dir: /etc/chromium/policies/managed
+kiosk_start_page: /usr/local/share/kiosk/start.html
 kiosk_common_policies:
   BrowserSignin: 0
   DefaultBrowserSettingEnabled: false
@@ -20,6 +21,8 @@ kiosk_session_policies:
   DownloadRestrictions: 3
   IncognitoModeAvailability: 1
   PrintingEnabled: false
+  URLAllowlist:
+    - "file://{{ kiosk_start_page }}"
   URLBlocklist:
     - chrome://*
     - file://*

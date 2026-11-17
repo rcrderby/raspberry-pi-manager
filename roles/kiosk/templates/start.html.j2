@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!-- {{ ansible_managed }} -->
+<!-- Counts down, then opens the kiosk URL once the CRG server responds. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Starting the CRG display</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: #000;
+        color: #fff;
+        font-family: sans-serif;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4vh;
+        text-align: center;
+      }
+      .message {
+        font-size: 7vh;
+      }
+      .countdown {
+        font-size: 30vh;
+        font-weight: bold;
+        line-height: 1;
+      }
+      .detail {
+        font-size: 4vh;
+        color: #bbb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="message" id="message"></div>
+    <div class="countdown" id="countdown"></div>
+    <div class="detail" id="detail"></div>
+    <script>
+      const target = {{ kiosk_url | to_json }};
+      const host = new URL(target).host;
+      const startDelay = {{ kiosk_start_delay | int }};
+      const retryInterval = {{ kiosk_retry_interval | int }};
+      const timeout = {{ kiosk_check_timeout | int }};
+
+      function show(message, countdown, detail) {
+        document.getElementById('message').textContent = message;
+        document.getElementById('countdown').textContent = countdown;
+        document.getElementById('detail').textContent = detail;
+      }
+
+      function countDown(seconds, message, detail, next) {
+        show(message, seconds, detail);
+        if (seconds <= 0) {
+          next();
+        } else {
+          setTimeout(countDown, 1000, seconds - 1, message, detail, next);
+        }
+      }
+
+      async function connect(attempt) {
+        document.getElementById('detail').textContent = 'Connecting to ' + host + '…';
+        try {
+          await fetch(target, { mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(timeout * 1000) });
+          location.replace(target);
+        } catch (error) {
+          countDown(retryInterval, 'Waiting for CRG at ' + host, 'seconds until attempt ' + (attempt + 1), function () {
+            connect(attempt + 1);
+          });
+        }
+      }
+
+      countDown(startDelay, 'Starting the CRG display', 'seconds until ' + host + ' opens', function () {
+        connect(1);
+      });
+    </script>
+  </body>
+</html>

@@ -1,10 +1,10 @@
 #!/bin/sh
 # {{ ansible_managed }}
-# Starts Chromium in kiosk mode on the kiosk URL.
+# Starts Chromium in kiosk mode on the start page, which opens the kiosk URL.
 prefs="$HOME/.config/chromium/Default/Preferences"
 if [ -f "$prefs" ]; then
   sed -i -e 's/"exited_cleanly":false/"exited_cleanly":true/' \
     -e 's/"exit_type":"[^"]*"/"exit_type":"Normal"/' "$prefs"
 fi
 exec /usr/bin/chromium --kiosk --noerrdialogs --no-first-run --disable-session-crashed-bubble \
-  {{ kiosk_url | quote }}
+  {{ ('file://' ~ kiosk_start_page) | quote }}
