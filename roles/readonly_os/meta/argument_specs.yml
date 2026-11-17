@@ -6,10 +6,10 @@ argument_specs:
   status:
     short_description: Reads the lock state
     description:
-      - Sets readonly_overlay_active, readonly_overlay_configured, readonly_bootro_active, readonly_bootro_configured,
-        and readonly_locked.
+      - Sets readonly_os_overlay_active, readonly_os_overlay_configured, readonly_os_bootro_active, readonly_os_bootro_configured,
+        and readonly_os_locked.
     options:
-      readonly_boot_dir:
+      readonly_os_boot_dir:
         type: str
         default: /boot/firmware
         description: Mount point of the boot partition.
@@ -20,11 +20,11 @@ argument_specs:
         read-only, enables the overlay file system, and reboots.
       - While locked, no change to the file systems persists across a reboot.
     options:
-      readonly_boot_dir:
+      readonly_os_boot_dir:
         type: str
         default: /boot/firmware
         description: Mount point of the boot partition.
-      readonly_reboot_timeout:
+      readonly_os_reboot_timeout:
         type: int
         default: 600
         description: Seconds to wait for the Pi to return after a reboot.
@@ -33,11 +33,11 @@ argument_specs:
     description:
       - Disables the overlay file system, reboots, makes the boot partition writable, and selects the desktop session.
     options:
-      readonly_boot_dir:
+      readonly_os_boot_dir:
         type: str
         default: /boot/firmware
         description: Mount point of the boot partition.
-      readonly_reboot_timeout:
+      readonly_os_reboot_timeout:
         type: int
         default: 600
         description: Seconds to wait for the Pi to return after a reboot.

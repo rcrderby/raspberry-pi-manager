@@ -8,7 +8,7 @@ The Ansible automation in this repo provisions and maintains Raspberry Pis that 
 
 ### Kiosk/Locked Mode
 
-Each Pi runs Raspberry Pi OS (64-bit) and starts in kiosk mode, where Chromium displays a CRG page full screen without any desktop interaction.  In this mode, the Pi is locked with its boot partition in read-only mode, which allows it to tolerate power losses without corrupting the OS or file system.
+Each Pi runs Raspberry Pi OS (64-bit) and starts in kiosk mode, where Chromium displays a CRG page full screen without any desktop interaction. In this mode, the Pi is locked: its boot partition is read-only, and changes to its root file system are kept in memory and discarded at reboot, which allows it to tolerate power losses without corrupting the OS or file system.
 
 In kiosk mode, the Pi accepts commands from a USB keyboard or through a VNC session that tell Chromium to:
 
@@ -19,7 +19,7 @@ In kiosk mode, the Pi accepts commands from a USB keyboard or through a VNC sess
 
 ### Unlocked Mode
 
-Unlocking a Pi starts the Raspberry Pi desktop, for maintenance, updates, etc.  In this mode, the Pi will not automatically launch Chromium.
+Unlocking a Pi starts the Raspberry Pi desktop, for maintenance, updates, etc. In this mode, the Pi will not automatically launch Chromium.
 
 ## Getting Started
 
@@ -33,11 +33,11 @@ Unlocking a Pi starts the Raspberry Pi desktop, for maintenance, updates, etc.  
 
 ### Environment Setup
 
-The playbooks run from a computer on the same network as the Pis. That network must have internet access to install Pi updates. Run all Ansible commands from the root of the repository.
+The playbooks run from a computer on the same network as the Pis. That network must have internet access for Pi updates and locking. Run all Ansible commands from the root of the repository.
 
-### Credentials
+#### Credentials
 
-All Pis share one password for the user `rcr`. Ansible prompts for the password for SSH connectivity, and again for sudo access.
+All Pis share one password for the user `rcr`. Ansible prompts for the password for SSH connectivity, and again for sudo access; press Enter at the sudo prompt to use the same password.
 
 #### Development Container
 
@@ -72,7 +72,7 @@ pip install -r requirements.txt
 scripts/install-collections.sh
 ```
 
-Activate the virtual environment with `source .venv/bin/activate`.
+Activate the virtual environment with `source .venv/bin/activate` in each new terminal.
 
 ### New Pi Provisioning
 
@@ -80,7 +80,7 @@ To provision several Pis at once, repeat steps 1–6 for each Pi, then run step 
 
 1. **Add the Pi to the Ansible inventory.** Skip this step for a Pi that is already in the inventory.
    1. Add the hostname to the model group in `inventory/hosts.yml`: `pi5` or `pi4`.
-   2. Create `inventory/host_vars/<hostname>.yml` with the Pi's IP address and CRG page.  For example:
+   2. Create `inventory/host_vars/<hostname>.yml` with the Pi's IP address and CRG page. For example:
 
       ```yaml
       ---
@@ -88,13 +88,13 @@ To provision several Pis at once, repeat steps 1–6 for each Pi, then run step 
       kiosk_url: http://crg:8000/views/wb/?theme=null
       ```
 
-2. **Create the network configuration file.** This writes `build/cloud-init/<hostname>/network-config` files or every Pi in the inventory:
+2. **Create the network configuration file.** This writes `build/cloud-init/<hostname>/network-config` files for every Pi in the inventory:
 
    ```bash
    ansible-playbook playbooks/cloud-init.yml
    ```
 
-3. **Install the Raspberry Pi Image on the SD card** with [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
+3. **Write the Raspberry Pi OS to the SD card** with [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
 
    | Setting | Value |
    | --- | --- |
@@ -108,13 +108,13 @@ To provision several Pis at once, repeat steps 1–6 for each Pi, then run step 
 
 4. **Copy the network configuration file** to the SD card. Open the `bootfs` volume of the SD card, and replace the default `network-config` file with the `build/cloud-init/<hostname>/network-config` file. Eject the SD card.
 
-5. **Start the Pi.** Insert the SD card, connect the Pi to the network, and connect the display to the HDMI port next to the USB-C power port (HDMI 1); the other HDMI port is disabled. Connect power the Pi to power. After a few minutes, the Pi responds to pings:
+5. **Start the Pi.** Insert the SD card, connect the Pi to the network, and connect the display to the HDMI port next to the USB-C power port (HDMI0); the other HDMI port is disabled. Connect the Pi to power. After a few minutes, the Pi responds to pings:
 
    ```bash
    ping -c 1 10.0.40.X
    ```
 
-6. **Remove the old host key** if you're using IP address that was previously in use:
+6. **Remove the old host key** if the Pi uses an IP address that was previously in use:
 
    ```bash
    ssh-keygen -R 10.0.40.X
@@ -123,7 +123,7 @@ To provision several Pis at once, repeat steps 1–6 for each Pi, then run step 
 7. **Configure and lock the Pi.** Run `maintenance.yml` with the `--limit` parameter and the hostname. To provision several Pis, separate the hostnames with commas, or omit the `--limit` parameter to provision every Pi in the inventory:
 
    ```bash
-   ansible-playbook playbooks/maintenance.yml --ask-pass --ask-become-pass --limit east-bench-pi-1
+   ansible-playbook playbooks/maintenance.yml --ask-pass --ask-become-pass --limit north-wall-pi-1
    ```
 
    The playbook configures the Pi, upgrades its packages, and locks the OS. The Pi reboots several times during this process.
@@ -144,16 +144,16 @@ ansible-playbook playbooks/maintenance.yml --ask-pass --ask-become-pass --limit 
 
 | Task | Options | Result |
 | --- | --- | --- |
-| Update Pis | None | Unlocks, applies inventory settings, upgrades packages, and locks |
+| Update the Pis | None | Unlocks, applies inventory settings, upgrades packages, and locks |
 | Change a setting, such as `kiosk_url` | None, after editing the inventory | Same as updating the Pis |
 | Unlock for work on the desktop | `-e maintenance_mode=unlock` | Reboots into the desktop |
 | Lock after work on the desktop | `-e maintenance_mode=lock` | Reboots into kiosk mode |
 | Show the lock state | `-e maintenance_mode=lock` | Reports `<hostname> is locked.` and locks any unlocked Pi |
 | Replace or re-image an SD card | Not applicable | Follow steps 2–7 of [New Pi Provisioning](#new-pi-provisioning) |
 
-Note: upgrading packages requires internet access.
+Note: upgrading packages and locking Pis require internet access.
 
-If Ansible cannot reach one or more Pis, the playbook continues running against any reachable Pis, and will list failures in the `PLAY RECAP`.
+If one or more Pis have configuration failures or cannot be reached, the playbook continues running against the other Pis, and lists any failures in the `PLAY RECAP`. After resolving any problems, run the playbook again with `--limit` and the hostnames of the Pis that reported failures.
 
 `playbooks/site.yml` stops if a Pi is locked, or if its hardware model does not match its model group in the inventory.
 

@@ -21,7 +21,7 @@
   tasks:
     - name: Unlock the Pi
       ansible.builtin.include_role:
-        name: readonly
+        name: readonly_os
         tasks_from: unlock
       when: maintenance_mode | default('update') in ['update', 'unlock']
 
@@ -48,7 +48,7 @@
   tasks:
     - name: Lock the Pi
       ansible.builtin.include_role:
-        name: readonly
+        name: readonly_os
         tasks_from: lock
       when: maintenance_mode | default('update') in ['update', 'lock']
 
@@ -59,9 +59,9 @@
   tasks:
     - name: Read the lock state
       ansible.builtin.include_role:
-        name: readonly
+        name: readonly_os
         tasks_from: status
 
     - name: Report the lock state
       ansible.builtin.debug:
-        msg: "{{ inventory_hostname }} is {{ 'locked' if readonly_locked else 'unlocked' }}."
+        msg: "{{ inventory_hostname }} is {{ 'locked' if readonly_os_locked else 'unlocked' }}."

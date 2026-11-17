@@ -7,6 +7,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # libatomic1 is required by the Node.js that pre-commit installs on arm64.
 # en_US.UTF-8 is required by the VS Code Git extension, which runs git with LC_ALL=en_US.UTF-8.
+# iputils-ping provides ping, to check that a Pi is reachable.
 # rsync is required by the Molecule Docker driver to build test images.
 # sshpass is required by Ansible for SSH password authentication.
 # hadolint ignore=DL3008
@@ -15,6 +16,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         ca-certificates \
         git \
+        iputils-ping \
         less \
         libatomic1 \
         locales \
