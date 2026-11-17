@@ -1,0 +1,36 @@
+---
+- name: Check that the interface keeps its current address
+  ansible.builtin.assert:
+    that:
+      - network_allow_address_change or
+        network_address == (ansible_facts[network_interface].ipv4.address | default(''))
+    fail_msg: >-
+      {{ network_interface }} has {{ ansible_facts[network_interface].ipv4.address | default('no IPv4 address') }},
+      not {{ network_address }}. Set network_allow_address_change=true to change it at the next reboot.
+    quiet: true
+
+- name: Find Netplan files
+  ansible.builtin.find:
+    paths: /etc/netplan
+    patterns:
+      - "*.yaml"
+      - "*.yml"
+  register: network_netplan_found
+
+- name: Remove other Netplan files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ network_netplan_found.files | rejectattr('path', 'equalto', network_netplan_file) | list }}"
+  loop_control:
+    label: "{{ item.path }}"
+  notify: Reboot the Pi
+
+- name: Write the Netplan file
+  ansible.builtin.template:
+    src: netplan.yaml.j2
+    dest: "{{ network_netplan_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Reboot the Pi

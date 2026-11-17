@@ -7,3 +7,9 @@ network_prefix: 24
 network_gateway: 10.0.40.1
 network_nameservers:
   - 10.0.40.1
+
+base_timezone: America/Los_Angeles
+base_hosts:
+  - address: 10.0.40.100
+    names:
+      - crg

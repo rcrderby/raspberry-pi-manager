@@ -1,0 +1,23 @@
+network:
+  version: 2
+  ethernets:
+    {{ network_interface }}:
+      renderer: NetworkManager
+      match: {}
+      addresses:
+      - "{{ network_address }}/{{ network_prefix }}"
+{% if network_nameservers | length > 0 %}
+      nameservers:
+        addresses:
+{% for nameserver in network_nameservers %}
+        - {{ nameserver }}
+{% endfor %}
+{% endif %}
+      routes:
+      - to: "0.0.0.0/0"
+        via: "{{ network_gateway }}"
+      networkmanager:
+        uuid: "{{ network_connection_uuid }}"
+        name: "netplan-{{ network_interface }}"
+        passthrough:
+          proxy._: ""

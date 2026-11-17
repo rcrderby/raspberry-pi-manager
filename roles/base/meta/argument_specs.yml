@@ -1,0 +1,44 @@
+---
+argument_specs:
+  main:
+    short_description: Configures system settings shared by all Pis
+    options:
+      base_locale:
+        type: str
+        default: en_US.UTF-8
+        description: System locale.
+      base_timezone:
+        type: str
+        default: Etc/UTC
+        description: Time zone name.
+      base_keyboard_model:
+        type: str
+        default: pc105
+        description: XKB keyboard model.
+      base_keyboard_layout:
+        type: str
+        default: us
+        description: XKB keyboard layout.
+      base_hosts:
+        type: list
+        elements: dict
+        default: []
+        description: Extra /etc/hosts entries, added after the inventory hosts.
+        options:
+          address:
+            type: str
+            required: true
+            description: IP address.
+          names:
+            type: list
+            elements: str
+            required: true
+            description: Host names for the address.
+      base_journal_max_use:
+        type: str
+        default: 50M
+        description: Maximum disk and memory space used by the systemd journal.
+      base_reboot:
+        type: bool
+        default: true
+        description: Reboot when a change requires it.

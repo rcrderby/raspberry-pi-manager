@@ -1,0 +1,8 @@
+---
+base_locale: en_US.UTF-8
+base_timezone: Etc/UTC
+base_keyboard_model: pc105
+base_keyboard_layout: us
+base_hosts: []
+base_journal_max_use: 50M
+base_reboot: true
