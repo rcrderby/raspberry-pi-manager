@@ -1,0 +1,25 @@
+---
+kiosk_config_dir: /etc/labwc-kiosk
+kiosk_session: kiosk
+kiosk_policy_dir: /etc/chromium/policies/managed
+kiosk_common_policies:
+  BrowserSignin: 0
+  DefaultBrowserSettingEnabled: false
+  DiskCacheSize: "{{ kiosk_disk_cache_size }}"
+  HttpsOnlyMode: disallowed
+  HttpsUpgradesEnabled: false
+  MetricsReportingEnabled: false
+  PasswordManagerEnabled: false
+  SyncDisabled: true
+  TranslateEnabled: false
+kiosk_session_policies:
+  AllowFileSelectionDialogs: false
+  BrowserAddPersonEnabled: false
+  BrowserGuestModeEnabled: false
+  DeveloperToolsAvailability: 2
+  DownloadRestrictions: 3
+  IncognitoModeAvailability: 1
+  PrintingEnabled: false
+  URLBlocklist:
+    - chrome://*
+    - file://*

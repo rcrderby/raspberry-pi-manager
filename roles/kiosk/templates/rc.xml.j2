@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!-- {{ ansible_managed }} -->
+<labwc_config>
+  <keyboard>
+{% for key in kiosk_blocked_keys %}
+    <keybind key="{{ key }}" overrideInhibition="yes">
+      <action name="Execute" command="/bin/true" />
+    </keybind>
+{% endfor %}
+  </keyboard>
+  <mouse>
+    <context name="Root">
+      <mousebind button="Left" action="Press">
+        <action name="None" />
+      </mousebind>
+      <mousebind button="Middle" action="Press">
+        <action name="None" />
+      </mousebind>
+      <mousebind button="Right" action="Press">
+        <action name="None" />
+      </mousebind>
+    </context>
+  </mouse>
+  <windowRules>
+    <windowRule identifier="*">
+      <action name="WarpCursor" to="output" x="-1" y="-1" />
+      <action name="HideCursor" />
+    </windowRule>
+  </windowRules>
+</labwc_config>

@@ -1,0 +1,43 @@
+---
+kiosk_user: "{{ ansible_user }}"
+kiosk_home: "/home/{{ kiosk_user }}"
+kiosk_keyboard_model: "{{ base_keyboard_model | default('pc105') }}"
+kiosk_keyboard_layout: "{{ base_keyboard_layout | default('us') }}"
+kiosk_disk_cache_size: 104857600
+kiosk_desktop_session: rpd-labwc
+kiosk_blocked_keys:
+  - A-F4
+  - C-F4
+  - C-w
+  - C-S-w
+  - C-q
+  - C-S-q
+  - C-n
+  - C-S-n
+  - C-t
+  - C-S-t
+  - C-o
+  - C-s
+  - C-p
+  - C-S-p
+  - C-u
+  - C-h
+  - C-j
+  - C-d
+  - C-e
+  - C-k
+  - C-S-a
+  - C-S-b
+  - C-S-c
+  - C-S-i
+  - C-S-j
+  - C-S-m
+  - C-S-o
+  - C-S-Delete
+  - A-Home
+  - A-e
+  - A-f
+  - F1
+  - F10
+  - F11
+  - F12
