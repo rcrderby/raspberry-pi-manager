@@ -9,8 +9,13 @@
 - name: Read the lock state
   ansible.builtin.include_tasks: status.yml
 
+# Set once, so the steps after the reboot still run when the lock state changes.
+- name: Record whether the Pi needs locking
+  ansible.builtin.set_fact:
+    readonly_os_lock_needed: "{{ not readonly_os_overlay_active }}"
+
 - name: Lock the Pi
-  when: not readonly_os_overlay_active
+  when: readonly_os_lock_needed
   block:
     - name: Select the kiosk session
       ansible.builtin.include_role:
