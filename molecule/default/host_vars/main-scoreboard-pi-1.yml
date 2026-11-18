@@ -1,0 +1,7 @@
+---
+ansible_host: main-scoreboard-pi-1
+ansible_connection: community.docker.docker_api
+base_reboot: false
+network_address: 10.0.40.251
+network_allow_address_change: true
+kiosk_url: http://crg:8000/views/standard/?theme=null

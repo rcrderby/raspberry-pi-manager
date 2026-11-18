@@ -1,5 +1,10 @@
 ---
 pi_config_boot_dir: /boot/firmware
+pi_config_settings: []
 pi_config_dtoverlays: []
+pi_config_gpio_fan: false
+pi_config_gpio_fan_pin: 14
+pi_config_gpio_fan_temp: 60
 pi_config_cmdline_params:
   - video=HDMI-A-2:d
+pi_config_cmdline_absent: []

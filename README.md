@@ -90,6 +90,8 @@ To provision several Pis at once, repeat steps 1–6 for each Pi, then run step 
       kiosk_url: http://crg:8000/views/wb/?theme=null
       ```
 
+      A Pi 4 controls a temperature-activated fan connected to GPIO14. For a Pi 4 with other hardware connected to GPIO14, add `pi_config_gpio_fan: false` to this file.
+
 2. **Create the network configuration file.** This writes `build/cloud-init/<hostname>/network-config` files for every Pi in the inventory:
 
    ```bash

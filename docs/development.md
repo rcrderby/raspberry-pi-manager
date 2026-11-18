@@ -22,7 +22,7 @@ Each role documents its variables in `meta/argument_specs.yml`.
 | --- | --- |
 | `base` | Hostname, `/etc/hosts`, locale, time zone, console keyboard, journal size; disables cloud-init |
 | `network` | Static IPv4 address of the wired interface, in a Netplan file in the format NetworkManager uses |
-| `pi_config` | Wi-Fi and Bluetooth disabled (device tree overlays), second HDMI port disabled, SSH and VNC enabled |
+| `pi_config` | Wi-Fi and Bluetooth disabled (device tree overlays), second HDMI port disabled, SSH and VNC enabled, and on the Pi 4, serial console disabled and fan control on GPIO14 enabled (`pi_config_gpio_fan`) |
 | `desktop` | Wallpaper, desktop shortcuts, and keyboard layout of the desktop session |
 | `kiosk` | Kiosk session: labwc with its own configuration and Chromium only, restarted if it exits; a start page that counts down, then opens the CRG page once the CRG server responds; ignores key combinations that exit kiosk mode, and the mouse pointer is hidden until the mouse moves. Chromium policies, and passwords stored without a keyring |
 | `readonly_os` | `overlayroot` package; lock, unlock, and status steps used by `maintenance.yml` |
@@ -39,7 +39,7 @@ pre-commit run --all-files
 
 CI (`.github/workflows/ci.yml`) runs the same hooks in the development container image, and scans the full git history for secrets with gitleaks.
 
-CI also runs the Molecule scenario in `molecule/default/`. It runs `site.yml` in a Debian Trixie container with systemd, runs it again to check that nothing changes, and checks the resulting files. Tasks that need Raspberry Pi hardware are tagged `molecule-notest` and skipped; locking and unlocking are tested on hardware only. To run the scenario, Molecule needs access to a Docker daemon:
+CI also runs the Molecule scenario in `molecule/default/`. It runs `site.yml` for a Pi 4 and a Pi 5, each in a Debian Trixie container with systemd, runs it again to check that nothing changes, and checks the resulting files. Tasks that need Raspberry Pi hardware are tagged `molecule-notest` and skipped; locking and unlocking are tested on hardware only. To run the scenario, Molecule needs access to a Docker daemon:
 
 ```bash
 molecule test

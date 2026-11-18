@@ -1,14 +1,20 @@
 ---
-- name: Add device tree overlays to config.txt
+- name: Add settings and device tree overlays to config.txt
   ansible.builtin.blockinfile:
     path: "{{ pi_config_boot_dir }}/config.txt"
     marker: "# {mark} ANSIBLE MANAGED BLOCK"
     insertafter: EOF
     block: |
       [all]
+      {% for setting in pi_config_settings %}
+      {{ setting }}
+      {% endfor %}
       {% for overlay in pi_config_dtoverlays %}
       dtoverlay={{ overlay }}
       {% endfor %}
+      {% if pi_config_gpio_fan %}
+      dtoverlay=gpio-fan,gpiopin={{ pi_config_gpio_fan_pin }},temp={{ pi_config_gpio_fan_temp * 1000 }}
+      {% endif %}
   notify: Reboot the Pi
 
 - name: Read the kernel command line file
@@ -16,10 +22,11 @@
     src: "{{ pi_config_boot_dir }}/cmdline.txt"
   register: pi_config_cmdline
 
-- name: Add parameters to the kernel command line
+- name: Add and remove kernel command line parameters
   ansible.builtin.copy:
     content: >-
-      {{ (((pi_config_cmdline.content | b64decode).split() | reject('in', pi_config_cmdline_params) | list)
+      {{ (((pi_config_cmdline.content | b64decode).split()
+      | reject('in', pi_config_cmdline_params + pi_config_cmdline_absent) | list)
       + pi_config_cmdline_params) | join(' ') }}
     dest: "{{ pi_config_boot_dir }}/cmdline.txt"
     owner: root
