@@ -1,0 +1,7 @@
+---
+- name: Check that only a Pi 4 uses GPIO fan control
+  ansible.builtin.assert:
+    that:
+      - not (pi_config_gpio_fan | default(false)) or 'pi4' in group_names
+    fail_msg: "{{ inventory_hostname }} has 'pi_config_gpio_fan' set to 'true', which only a Pi 4 supports. Remove the setting, then run the playbook again."
+    quiet: true

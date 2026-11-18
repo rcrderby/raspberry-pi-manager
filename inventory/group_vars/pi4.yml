@@ -1,5 +1,11 @@
 ---
 device_model_pattern: "^Raspberry Pi 4 Model B "
+# With Bluetooth disabled, the serial console uses GPIO14, which is also the fan control pin.
+pi_config_settings:
+  - enable_uart=0
 pi_config_dtoverlays:
   - disable-wifi
   - disable-bt
+pi_config_gpio_fan: true
+pi_config_cmdline_absent:
+  - console=serial0,115200

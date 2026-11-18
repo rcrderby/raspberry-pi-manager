@@ -37,22 +37,43 @@
       ansible.builtin.assert:
         that:
           - "'10.0.40.100 crg' in verify_content.hosts.splitlines()"
-          - "'10.0.40.7 east-bench-pi-1' in verify_content.hosts.splitlines()"
+          - (network_address ~ ' ' ~ inventory_hostname) in verify_content.hosts.splitlines()
           - "'LANG=en_US.UTF-8' in verify_content.locale.splitlines()"
           - "'SystemMaxUse=50M' in verify_content.journald.splitlines()"
-          - "'dtoverlay=disable-wifi-pi5' in verify_content.config.splitlines()"
-          - "'dtoverlay=disable-bt-pi5' in verify_content.config.splitlines()"
           - "'video=HDMI-A-2:d' in verify_content.cmdline.split()"
+          - "'console=tty1' in verify_content.cmdline.split()"
           - (verify_content.policies | from_json).HttpsOnlyMode == 'disallowed'
           - (verify_content.policies | from_json).DiskCacheSize == 104857600
           - "'--password-store=basic' in verify_content.password_store"
           - "'file:///usr/local/share/kiosk/start.html' in verify_content.kiosk_browser"
-          - "'const target = \"http://crg:8000/views/wb/?theme=null\";' in verify_content.start_page"
+          - ('const target = ' ~ (kiosk_url | to_json) ~ ';') in verify_content.start_page
           - "'Exec=/usr/local/bin/kiosk-session' in verify_content.kiosk_session.splitlines()"
           - "'wallpaper=/usr/local/share/backgrounds/rcr-background-1.png' in verify_content.desktop_items.splitlines()"
           - "'URL=http://crg:8000/' in verify_content.shortcut.splitlines()"
           - "'autologin-session=rpd-labwc' in verify_content.lightdm.splitlines()"
         quiet: true
+
+    - name: Check the Pi 4 boot settings
+      ansible.builtin.assert:
+        that:
+          - "'dtoverlay=disable-wifi' in verify_content.config.splitlines()"
+          - "'dtoverlay=disable-bt' in verify_content.config.splitlines()"
+          - "'enable_uart=0' in verify_content.config.splitlines()"
+          - "'dtoverlay=gpio-fan,gpiopin=14,temp=60000' in verify_content.config.splitlines()"
+          - "'console=serial0,115200' not in verify_content.cmdline.split()"
+        quiet: true
+      when: "'pi4' in group_names"
+
+    - name: Check the Pi 5 boot settings
+      ansible.builtin.assert:
+        that:
+          - "'dtoverlay=disable-wifi-pi5' in verify_content.config.splitlines()"
+          - "'dtoverlay=disable-bt-pi5' in verify_content.config.splitlines()"
+          - "'enable_uart=0' not in verify_content.config.splitlines()"
+          - "'gpio-fan' not in verify_content.config"
+          - "'console=serial0,115200' in verify_content.cmdline.split()"
+        quiet: true
+      when: "'pi5' in group_names"
 
     - name: Find Netplan files
       ansible.builtin.find:

@@ -3,6 +3,9 @@
   hosts: raspberry_pis
   become: true
   pre_tasks:
+    - name: Check the settings
+      ansible.builtin.import_tasks: tasks/check-settings.yml
+
     - name: Read the hardware model
       ansible.builtin.slurp:
         src: /proc/device-tree/model

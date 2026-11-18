@@ -15,6 +15,10 @@
         fail_msg: "maintenance_mode must be update, unlock, lock, or status."
         quiet: true
 
+    # Checked before unlocking, so a Pi with any incorrect setting is not changed.
+    - name: Check the settings
+      ansible.builtin.import_tasks: tasks/check-settings.yml
+
 - name: Unlock
   hosts: raspberry_pis
   become: true

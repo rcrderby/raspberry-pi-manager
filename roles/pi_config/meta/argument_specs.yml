@@ -9,14 +9,36 @@ argument_specs:
         type: str
         default: /boot/firmware
         description: Mount point of the boot partition.
+      pi_config_settings:
+        type: list
+        elements: str
+        default: []
+        description: Settings added to config.txt before the device tree overlays, such as enable_uart=0.
       pi_config_dtoverlays:
         type: list
         elements: str
         default: []
         description: Device tree overlays added to config.txt, such as the overlays that disable Wi-Fi and Bluetooth.
+      pi_config_gpio_fan:
+        type: bool
+        default: false
+        description: Whether to control a temperature-activated fan connected to a GPIO pin. Pi 4 only; the playbooks stop if another model sets it to true.
+      pi_config_gpio_fan_pin:
+        type: int
+        default: 14
+        description: GPIO pin connected to the fan's control wire.
+      pi_config_gpio_fan_temp:
+        type: int
+        default: 60
+        description: Temperature in °C that turns the fan on. The fan turns off 10 °C lower.
       pi_config_cmdline_params:
         type: list
         elements: str
         default:
           - video=HDMI-A-2:d
         description: Parameters added to the kernel command line. The default disables the second HDMI port.
+      pi_config_cmdline_absent:
+        type: list
+        elements: str
+        default: []
+        description: Parameters removed from the kernel command line, such as console=serial0,115200.

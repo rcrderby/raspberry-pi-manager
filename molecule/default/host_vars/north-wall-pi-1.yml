@@ -1,7 +1,7 @@
 ---
-ansible_host: east-bench-pi-1
+ansible_host: north-wall-pi-1
 ansible_connection: community.docker.docker_api
 base_reboot: false
-network_address: 10.0.40.7
+network_address: 10.0.40.250
 network_allow_address_change: true
 kiosk_url: http://crg:8000/views/wb/?theme=null
