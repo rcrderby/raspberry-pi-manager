@@ -161,7 +161,7 @@ Locking a Pi removes its SSH authorized keys, so a key added to an unlocked Pi d
 
 If one or more Pis have configuration failures or cannot be reached, the playbook continues running against the other Pis, and lists any failures in the `PLAY RECAP`. After resolving any problems, run the playbook again with `--limit` and the hostnames of the Pis that reported failures.
 
-`playbooks/site.yml` stops if a Pi is locked, or if its hardware model does not match its model group in the inventory.
+Before unlocking a Pi for an update, `playbooks/maintenance.yml` stops if the Pi's hardware model does not match its model group in the inventory. `playbooks/site.yml` stops if a Pi is locked, or if its hardware model does not match its model group.
 
 ## Development
 

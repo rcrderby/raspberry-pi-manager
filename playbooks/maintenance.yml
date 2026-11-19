@@ -15,9 +15,10 @@
         fail_msg: "maintenance_mode must be update, unlock, lock, or status."
         quiet: true
 
-    # Checked before unlocking, so a Pi with any incorrect setting is not changed.
+    # Checked before unlocking, so a Pi with any incorrect setting or the wrong hardware model is not changed.
     - name: Check the settings
       ansible.builtin.import_tasks: tasks/check-settings.yml
+      when: maintenance_mode | default('update') == 'update'
 
     # A new Pi requires Internet access to install overlayroot.
     - name: Check whether overlayroot is installed
