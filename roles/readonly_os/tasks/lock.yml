@@ -26,6 +26,28 @@
         name: lightdm
         state: stopped
 
+    # Removes any SSH authorized keys when the root file system is writable, to prevent them from persisting in the file system.
+    - name: Find SSH authorized keys
+      ansible.builtin.find:
+        paths:
+          - /root
+          - /home
+        patterns:
+          - authorized_keys
+          - authorized_keys2
+        recurse: true
+        depth: 3
+        hidden: true
+      register: readonly_os_authorized_keys
+
+    - name: Remove SSH authorized keys
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ readonly_os_authorized_keys.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
     - name: Make the boot partition read-only at boot
       ansible.builtin.command:
         cmd: raspi-config nonint enable_bootro

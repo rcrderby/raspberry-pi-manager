@@ -16,8 +16,8 @@ argument_specs:
   lock:
     short_description: Locks the Pi
     description:
-      - Selects the kiosk session, stops the display manager so Chromium exits cleanly, makes the boot partition
-        read-only, enables the overlay file system, and reboots.
+      - Selects the kiosk session, stops the display manager so Chromium exits cleanly, removes and SSH authorized keys,
+        makes the boot partition read-only, enables the overlay file system, and reboots.
       - While locked, no change to the file systems persists across a reboot.
     options:
       readonly_os_boot_dir:
