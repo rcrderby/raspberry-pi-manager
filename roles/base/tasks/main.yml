@@ -76,3 +76,11 @@
     owner: root
     group: root
     mode: "0644"
+
+# Only the maintenance playbook downloads and installs packages, so no other service holds an apt lock.
+- name: Disable automatic package updates
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    masked: true
+    state: stopped
+  loop: "{{ base_masked_units }}"

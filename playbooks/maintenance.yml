@@ -19,6 +19,34 @@
     - name: Check the settings
       ansible.builtin.import_tasks: tasks/check-settings.yml
 
+    # A new Pi requires Internet access to install overlayroot.
+    - name: Check whether overlayroot is installed
+      ansible.builtin.command:
+        cmd: dpkg-query --show --showformat=${db:Status-Status} overlayroot
+      register: maintenance_overlayroot
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      when: maintenance_mode | default('update') in ['update', 'lock']
+
+    - name: Test Internet access for a new Pi
+      ansible.builtin.import_tasks: tasks/internet-access-test.yml
+      when:
+        - maintenance_mode | default('update') in ['update', 'lock']
+        - maintenance_overlayroot.stdout | default('installed') != 'installed'
+
+    - name: Check that a new Pi has Internet access
+      ansible.builtin.assert:
+        that:
+          - maintenance_unreachable_servers | length == 0
+        fail_msg: >-
+          {{ inventory_hostname }} needs Internet access to install overlayroot. {{ maintenance_internet_test_message }}
+          Connect the Pi to the Internet, then run the playbook again.
+        quiet: true
+      when:
+        - maintenance_mode | default('update') in ['update', 'lock']
+        - maintenance_overlayroot.stdout | default('installed') != 'installed'
+
 - name: Unlock
   hosts: raspberry_pis
   become: true
@@ -39,12 +67,25 @@
   become: true
   gather_facts: false
   tasks:
+    - name: Test Internet access
+      ansible.builtin.import_tasks: tasks/internet-access-test.yml
+      when: maintenance_mode | default('update') == 'update'
+
+    - name: Report the failed Internet access test
+      ansible.builtin.debug:
+        msg: "{{ maintenance_internet_test_message }} Skipping the package upgrade."
+      when:
+        - maintenance_mode | default('update') == 'update'
+        - maintenance_unreachable_servers | length > 0
+
     - name: Upgrade packages
       ansible.builtin.apt:
         upgrade: dist
         update_cache: true
         autoremove: true
-      when: maintenance_mode | default('update') == 'update'
+      when:
+        - maintenance_mode | default('update') == 'update'
+        - maintenance_unreachable_servers | length == 0
 
 - name: Lock
   hosts: raspberry_pis
@@ -70,3 +111,8 @@
     - name: Report the lock state
       ansible.builtin.debug:
         msg: "{{ inventory_hostname }} is {{ 'locked' if readonly_os_locked else 'unlocked' }}."
+
+    - name: Report the skipped package upgrade
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} did not upgrade packages because the Internet access test failed."
+      when: maintenance_unreachable_servers | default([]) | length > 0

@@ -75,6 +75,16 @@
         quiet: true
       when: "'pi5' in group_names"
 
+    - name: Check that automatic package updates are disabled
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+      loop:
+        - packagekit.service
+        - apt-daily.timer
+        - apt-daily-upgrade.timer
+      register: verify_updaters
+      failed_when: verify_updaters.status.UnitFileState != 'masked'
+
     - name: Find Netplan files
       ansible.builtin.find:
         paths: /etc/netplan

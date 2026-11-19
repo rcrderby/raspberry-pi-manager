@@ -35,7 +35,7 @@ Unlocking a Pi starts the Raspberry Pi desktop, for maintenance, updates, etc. I
 
 ### Environment Setup
 
-The playbooks run from a computer on the same network as the Pis. That network must have internet access for Pi updates and locking. Run all Ansible commands from the root of the repository.
+The playbooks run from a computer on the same network as the Pis. Provisioning a new Pi requires Internet access; without it, the playbook stops before making any changes the Pi. During maintenance, a Pi without Internet access skips the package upgrade. Run all Ansible commands from the root of the repository.
 
 #### Credentials
 
@@ -151,11 +151,13 @@ ansible-playbook playbooks/maintenance.yml --ask-pass --ask-become-pass --limit 
 | Update the Pis | None | Unlocks, applies inventory settings, upgrades packages, and locks |
 | Change a setting, such as `kiosk_url` | None, after editing the inventory | Same as updating the Pis |
 | Unlock for work on the desktop | `-e maintenance_mode=unlock` | Reboots into the desktop |
-| Lock after work on the desktop | `-e maintenance_mode=lock` | Reboots into kiosk mode |
+| Lock after work on the desktop | `-e maintenance_mode=lock` | Removes SSH authorized keys and reboots into kiosk mode |
 | Show the lock state | `-e maintenance_mode=status` | Reports `<hostname> is locked.` or `<hostname> is unlocked.` |
 | Replace or re-image an SD card | Not applicable | Follow steps 2–7 of [New Pi Provisioning](#new-pi-provisioning) |
 
-Note: upgrading packages and locking Pis require internet access.
+Note: a Pi without Internet access skips the package upgrade, and the playbook displays the cause. The other maintenance tasks, including locking, work without Internet access.
+
+Locking a Pi removes its SSH authorized keys, so a key added to an unlocked Pi does not persist. A key added to a locked Pi lasts until the next reboot.
 
 If one or more Pis have configuration failures or cannot be reached, the playbook continues running against the other Pis, and lists any failures in the `PLAY RECAP`. After resolving any problems, run the playbook again with `--limit` and the hostnames of the Pis that reported failures.
 

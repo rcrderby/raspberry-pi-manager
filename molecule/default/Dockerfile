@@ -28,6 +28,7 @@ RUN useradd --create-home --shell /bin/bash rcr \
     && mkdir -p /boot/firmware /etc/chromium.d /etc/cloud /etc/lightdm /etc/netplan /usr/share/wayland-sessions \
     && printf '[all]\n' > /boot/firmware/config.txt \
     && printf 'console=serial0,115200 console=tty1 root=/dev/mmcblk0p2 rootwait' > /boot/firmware/cmdline.txt \
-    && printf '[Seat:*]\nautologin-user=rcr\nautologin-session=rpd-labwc\n' > /etc/lightdm/lightdm.conf
+    && printf '[Seat:*]\nautologin-user=rcr\nautologin-session=rpd-labwc\n' > /etc/lightdm/lightdm.conf \
+    && printf '[Unit]\nDescription=PackageKit stand-in\n[Service]\nType=oneshot\nExecStart=/bin/true\n' > /usr/lib/systemd/system/packagekit.service
 
 CMD ["/lib/systemd/systemd"]
