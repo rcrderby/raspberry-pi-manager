@@ -6,22 +6,6 @@
     - name: Check the settings
       ansible.builtin.import_tasks: tasks/check-settings.yml
 
-    - name: Read the hardware model
-      ansible.builtin.slurp:
-        src: /proc/device-tree/model
-      register: site_model
-      tags:
-        - molecule-notest
-
-    - name: Check the hardware model
-      ansible.builtin.assert:
-        that:
-          - site_model.content | b64decode | regex_replace('\x00', '') is match(device_model_pattern)
-        fail_msg: "{{ inventory_hostname }} is not a device that matches '{{ device_model_pattern }}'."
-        quiet: true
-      tags:
-        - molecule-notest
-
     - name: Read the kernel command line
       ansible.builtin.slurp:
         src: /proc/cmdline

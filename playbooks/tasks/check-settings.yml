@@ -5,3 +5,19 @@
       - not (pi_config_gpio_fan | default(false)) or 'pi4' in group_names
     fail_msg: "{{ inventory_hostname }} has 'pi_config_gpio_fan' set to 'true', which only a Pi 4 supports. Remove the setting, then run the playbook again."
     quiet: true
+
+- name: Read the hardware model
+  ansible.builtin.slurp:
+    src: /proc/device-tree/model
+  register: check_settings_model
+  tags:
+    - molecule-notest
+
+- name: Check the hardware model
+  ansible.builtin.assert:
+    that:
+      - check_settings_model.content | b64decode | regex_replace('\x00', '') is match(device_model_pattern)
+    fail_msg: "{{ inventory_hostname }} is not a device that matches '{{ device_model_pattern }}'."
+    quiet: true
+  tags:
+    - molecule-notest
