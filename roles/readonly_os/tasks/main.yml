@@ -1,6 +1,16 @@
 ---
+- name: Check whether overlayroot is installed
+  ansible.builtin.command:
+    cmd: dpkg-query --show --showformat=${db:Status-Status} overlayroot
+  register: readonly_os_overlayroot
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+# For a new Pi - Internet access required to download and install overlayroot.
 - name: Install overlayroot
   ansible.builtin.apt:
     name: overlayroot
     state: present
-    cache_valid_time: 3600
+    update_cache: true
+  when: readonly_os_overlayroot.stdout != 'installed'

@@ -20,7 +20,7 @@ Each role documents its variables in `meta/argument_specs.yml`.
 
 | Role | Configures |
 | --- | --- |
-| `base` | Hostname, `/etc/hosts`, locale, time zone, console keyboard, journal size; disables cloud-init |
+| `base` | Hostname, `/etc/hosts`, locale, time zone, console keyboard, journal size; disables cloud-init, PackageKit, and the daily apt timers |
 | `network` | Static IPv4 address of the wired interface, in a Netplan file in the format NetworkManager uses |
 | `pi_config` | Wi-Fi and Bluetooth disabled (device tree overlays), second HDMI port disabled, SSH and VNC enabled, and on the Pi 4, serial console disabled and fan control on GPIO14 enabled (`pi_config_gpio_fan`) |
 | `desktop` | Wallpaper, desktop shortcuts, and keyboard layout of the desktop session |

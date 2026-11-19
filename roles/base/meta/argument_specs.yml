@@ -19,6 +19,14 @@ argument_specs:
         type: str
         default: us
         description: XKB keyboard layout.
+      base_masked_units:
+        type: list
+        elements: str
+        default:
+          - packagekit.service
+          - apt-daily.timer
+          - apt-daily-upgrade.timer
+        description: systemd units masked and stopped, so that only the maintenance playbook downloads and installs packages.
       base_hosts:
         type: list
         elements: dict

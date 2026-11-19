@@ -1,9 +1,6 @@
 ---
 - name: Install overlayroot
-  ansible.builtin.apt:
-    name: overlayroot
-    state: present
-    cache_valid_time: 3600
+  ansible.builtin.include_tasks: main.yml
   when: not ansible_check_mode
 
 - name: Read the lock state

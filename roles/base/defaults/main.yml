@@ -6,3 +6,7 @@ base_keyboard_layout: us
 base_hosts: []
 base_journal_max_use: 50M
 base_reboot: true
+base_masked_units:
+  - packagekit.service
+  - apt-daily.timer
+  - apt-daily-upgrade.timer

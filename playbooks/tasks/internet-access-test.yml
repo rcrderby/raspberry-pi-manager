@@ -1,0 +1,26 @@
+---
+# Sets maintenance_unreachable_servers to the package servers that did not respond,
+# and maintenance_internet_test_message to a description of the failure.
+- name: Internet access test
+  ansible.builtin.uri:
+    url: "{{ item }}"
+    method: HEAD
+    timeout: 5
+  loop:
+    - http://deb.debian.org/debian/
+    - http://archive.raspberrypi.com/debian/
+  register: maintenance_internet_test
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Record the package servers that did not respond
+  ansible.builtin.set_fact:
+    maintenance_unreachable_servers: >-
+      {{ maintenance_internet_test.results | rejectattr('status', 'gt', 0)
+      | map(attribute='item') | map('urlsplit', 'hostname') | list }}
+
+- name: Describe the Internet access test result
+  ansible.builtin.set_fact:
+    maintenance_internet_test_message: >-
+      Internet access test failed: {{ maintenance_unreachable_servers | join(', ') }} did not respond within 5 seconds.
