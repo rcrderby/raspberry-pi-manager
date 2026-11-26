@@ -56,6 +56,8 @@ molecule test
 | `.pre-commit-config.yaml` | pre-commit hooks | Dependabot |
 | `.github/workflows/*.yml` | GitHub Actions, pinned by commit SHA | Dependabot |
 
+Dependabot groups minor and patch updates into one pull request per ecosystem each week, and `.github/workflows/dependabot-auto-merge.yml` merges them once CI passes. Major updates get their own pull requests and need review. Dependabot does not propose new Python versions for the development container; change the `python` image tag in `.devcontainer/Dockerfile` manually.
+
 To compile `requirements.txt` after changing `requirements.in`, run this command in the development container:
 
 ```bash
