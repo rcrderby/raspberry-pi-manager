@@ -1,6 +1,10 @@
 ---
 version: 2
 
+# Minor and patch updates are grouped into one pull request per ecosystem.
+# Major updates get their own pull requests.
+# .github/workflows/dependabot-auto-merge.yml merges minor and patch updates after CI passes.
+
 updates:
   - package-ecosystem: pip
     directory: /
@@ -12,6 +16,11 @@ updates:
       prefix: build
     labels:
       - dependencies
+    groups:
+      pip-minor-and-patch:
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: docker
     directories:
@@ -25,6 +34,16 @@ updates:
       prefix: build
     labels:
       - dependencies
+    groups:
+      docker-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: python
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
 
   - package-ecosystem: pre-commit
     directory: /
@@ -36,6 +55,11 @@ updates:
       prefix: build
     labels:
       - dependencies
+    groups:
+      pre-commit-minor-and-patch:
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: github-actions
     directory: /
@@ -47,3 +71,8 @@ updates:
       prefix: ci
     labels:
       - dependencies
+    groups:
+      github-actions-minor-and-patch:
+        update-types:
+          - minor
+          - patch
